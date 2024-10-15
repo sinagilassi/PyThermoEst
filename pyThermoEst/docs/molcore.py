@@ -27,7 +27,6 @@ class MolCore:
             Dictionary of the reference file.
         '''
         try:
-
             # load reference file
             # current file path
             current_path = os.path.dirname(os.path.abspath(__file__))
