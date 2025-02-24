@@ -183,9 +183,9 @@
   T[max]: 330
   Bonds:
     - C1#XX2
-    - C1-CB3
+    - C1*{CB3}
   Blocks:
-    - CB3: Benzene-Ring
+    - CB3:  ["C1-C2","C2=C3","C3-*","C3-C4","C4=C5","C5-C6","C6=C1"]
 - No.: 17
   Group: C-middle-allenic-group
   a[i]: 3.20431
