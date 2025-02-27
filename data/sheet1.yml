@@ -233,18 +233,20 @@
     - C2=XX3
   Blocks:
     - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
+# REVIEW
 - No.: 21
-  Group: CB-(CB) # FIXME
+  Group: CB-(CB)
   a[i]: -5.12997
   b[i]: 4.03244
   d[i]: -0.595745
   T[min]: 273
   T[max]: 770
+  Parent: None
   Bonds:
-    - CB1-CB2
+    - C1-C2
+    - C1*{Chain1}
   Blocks:
-    - CB1: Benzene-Ring
-    - CB2: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 22
   Group: C-(H)2(C)(CB)
   a[i]: 2.12721
@@ -325,14 +327,22 @@
     - C5*{Chain1}
   Blocks:
     - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
-# FIXME
+# REVIEW
 - No.: 27
-  # Group: CBF-(CBF)(CB)2
-  # a[i]: -4.93252
-  # b[i]: 3.53466
-  # d[i]: -0.483297
-  # T[min]: 248
-  # T[max]: 700
+  Group: CBF-(CBF)(CB)2
+  a[i]: -4.93252
+  b[i]: 3.53466
+  d[i]: -0.483297
+  T[min]: 248
+  T[max]: 700
+  Parent: None
+  Bonds:
+    - C1-C2
+    - C1=C3
+    - C1-C4
+    - C4-C5
+    - C4=C6
+# REVIEW
 - No.: 28
   # Group: CBF-(CBF)2(CB)
   # a[i]: -5.34145
@@ -340,6 +350,7 @@
   # d[i]: -0.375158
   # T[min]: 332
   # T[max]: 510
+# REVIEW
 - No.: 29
   # Group: CBF-(CBF)3
   # a[i]: 23.3974
@@ -539,29 +550,31 @@
     - C2-C3
     - C2-C4
     - C4=O5
-# FIXME
 - No.: 45
-  # Group: CB-(CB)2(O)
-  # a[i]: 11.7089
-  # b[i]: -4.32718
-  # d[i]: 0.534999
-  # T[min]: 277
-  # T[max]: 600
-  # Bonds:
-  #   - CB1-CB2
-  #   - CB2-CB3
-  #   - CB3-O4
-  # Blocks:
-  #   - CB1: Benzene-Ring
-  #   - CB2: Benzene-Ring
-  #   - CB3: Benzene-Ring
+  Group: CB-(CB)2(O)
+  a[i]: 11.7089
+  b[i]: -4.32718
+  d[i]: 0.534999
+  T[min]: 277
+  T[max]: 600
+  Bonds:
+    - C1-O2
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 46
-  # Group: CB-(CB)2(CO)
-  # a[i]: -12.8355
-  # b[i]: 8.66959
-  # d[i]: -1.28313
-  # T[min]: 185
-  # T[max]: 705
+  Group: CB-(CB)2(CO)
+  a[i]: -12.8355
+  b[i]: 8.66959
+  d[i]: -1.28313
+  T[min]: 185
+  T[max]: 705
+  Bonds:
+    - C1-C2
+    - C2=O3
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 47
   Group: CO-(H)(C)
   a[i]: 13.3656
@@ -772,9 +785,10 @@
   T[max]: 520
   Bonds:
     - O1-C2
-    - O1-CB3
+    - O1-C3
+    - C3*{Chain1}
   Blocks:
-    - CB3: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 66
   Group: O-(CB)2
   a[i]: -29.6864
@@ -783,11 +797,13 @@
   T[min]: 191
   T[max]: 570
   Bonds:
-    - O1-CB2
-    - O1-CB3
+    - O1-C1
+    - O1-C2
+    - C1*{Chain1}
+    - C2*{Chain2}
   Blocks:
-    - CB2: Benzene-Ring
-    - CB3: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
+    - Chain2: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 67
   Group: O-(C)(CO)
   a[i]: 1.94851
@@ -809,7 +825,7 @@
   Bonds:
     - O1-C2
     - O1-C3
-    - C2=XX4
+    - C2=C4
     - C3=O5
 - No.: 69
   Group: C-(H)3(N)
@@ -859,16 +875,18 @@
     - C1-C3
     - C1-C4
     - C4-N5
-# FIXME
 - No.: 73
-  # Group: CB-(CB)2(N)
-  # a[i]: 5.72348
-  # b[i]: -2.18315
-  # d[i]: 0.317372
-  # T[min]: 235
-  # T[max]: 770
-  # Bonds:
-  #   - C1-CB2
+  Group: CB-(CB)2(N)
+  a[i]: 5.72348
+  b[i]: -2.18315
+  d[i]: 0.317372
+  T[min]: 235
+  T[max]: 770
+  Bonds:
+    - C1-N2
+    - C1*{Chain1}
+  Blocks:
+    - Chain2: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 74
   Group: N-(H)2(C)
   a[i]: 9.56972
@@ -912,9 +930,10 @@
   Bonds:
     - N1-H2
     - N1-C3
-    - N1-CB4
+    - N1-C4
+    - C4*{Chain1}
   Blocks:
-    - CB4: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 78
   Group: N-(H)(C)(N)
   a[i]: 2.9115
@@ -935,10 +954,11 @@
   T[max]: 358
   Bonds:
     - N1-H2
-    - N1-CB3
+    - N1-C3
+    - C3*{Chain1}
     - N1-N3
   Blocks:
-    - CB3: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 80
   Group: N-(H)(CB)2-pyrrole
   a[i]: -22.444
@@ -949,11 +969,13 @@
   Functional-Group: pyrrole
   Bonds:
     - N1-H2
-    - N1-CB3
-    - N1-CB4
+    - N1-C3
+    - C3*{Chain1}
+    - N1-C4
+    - C4*{Chain2}
   Blocks:
-    - CB3: Benzene-Ring
-    - CB4: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
+    - Chain2: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 81
   Group: N-(C)3
   a[i]: -5.18409
@@ -975,9 +997,10 @@
   Bonds:
     - N1-C2
     - N1-C3
-    - N1-CB4
+    - N1-C4
+    - C4*{Chain1}
   Blocks:
-    - CB4: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 83
   Group: N-(C)2(N)
   a[i]: -2.83275
@@ -997,12 +1020,11 @@
   T[min]: 207
   T[max]: 610
   Bonds:
-    - NB1-CB2
-    - NB1-CB3
-  Blocks:
-    NB1: Pyridine
-    CB1: Benzene-Ring
-    CB2: Benzene-Ring
+    - N1-C2
+    - N1=C3
+    - C2=C4
+    - C4-C5
+    - C5=C3
 - No.: 85
   Group: C-(H)2(C)(CN)
   a[i]: 10.2195
@@ -1037,18 +1059,23 @@
   T[min]: 197
   T[max]: 347
   Bonds:
-    - XX1=C2
+    - C1=C2
     - C2-H3
     - C2-C4
     - C4#N5
-# FIXME
 - No.: 88
-  # Group: CB-(CB)2(CN)
-  # a[i]: -1.00435
-  # b[i]: 4.62053
-  # d[i]: -0.659838
-  # T[min]: 265
-  # T[max]: 480
+  Group: CB-(CB)2(CN)
+  a[i]: -1.00435
+  b[i]: 4.62053
+  d[i]: -0.659838
+  T[min]: 265
+  T[max]: 480
+  Bonds:
+    - C1-C2
+    - C2#N3
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 89
   Group: CB-(NCO)-isocyanate
   a[i]: 5.35072
@@ -1058,11 +1085,12 @@
   T[max]: 480
   Functional-Group: isocyanate
   Bonds:
-    - CB1-N2
+    - C1-N2
     - N2=C3
     - C3=O4
+    - C1*{Chain1}
   Blocks:
-    - CB1: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 90
   Group: CB-(CB)2(NO2)
   a[i]: 35.6551
@@ -1070,6 +1098,13 @@
   d[i]: 1.95794
   T[min]: 250
   T[max]: 415
+  Bonds:
+    - C1-N2
+    - N2=O3
+    - N2-O4
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 91
   Group: C-(H)2(C)(NO2)
   a[i]: 17.9408
@@ -1130,10 +1165,11 @@
   Bonds:
     - C1-H2
     - C1-H3
-    - C1-CB4
-    - C1-Cl4
+    - C1-C4
+    - C1-Cl5
+    - C4*{Chain1}
   Blocks:
-    - CB4: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 96
   Group: C-(H)2(C)(F)
   a[i]: 5.64921
@@ -1334,23 +1370,24 @@
   T[min]: 211
   T[max]: 365
   Bonds:
-    - C1-CB2
+    - C1-C2
     - C1-F3
     - C1-F4
     - C1-F5
+    - C2*{Chain1}
   Blocks:
-    - CB2: Benzene-Ring
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 113
-  Group: Cd-(H)(C1)
+  Group: Cd-(H)(Cl)
   a[i]: 7.45374
   b[i]: -0.909389
   d[i]: 0.169918
   T[min]: 119
   T[max]: 300
   Bonds:
-    - XX1=C2
+    - C1=C2
     - C2-H3
-    - C2-C4
+    - C2-Cl4
 - No.: 114
   Group: Cd-(Cl)(F)
   a[i]: 7.99676
@@ -1359,7 +1396,7 @@
   T[min]: 120
   T[max]: 240
   Bonds:
-    - XX1=C2
+    - C1=C2
     - C2-Cl3
     - C2-F4
 - No.: 115
@@ -1370,7 +1407,7 @@
   T[min]: 157
   T[max]: 291
   Bonds:
-    - XX1=C2
+    - C1=C2
     - C2-Cl3
     - C2-Cl4
 - No.: 116
@@ -1381,38 +1418,57 @@
   T[min]: 120
   T[max]: 240
   Bonds:
-    - XX1=C2
+    - C1=C2
     - C2-F3
     - C2-F4
-# FIXME
 - No.: 117
-  # Group: CB-(CB)2(Br)
-  # a[i]: 1.93683
-  # b[i]: 1.96156
-  # d[i]: -0.1261815
-  # T[min]: 243
-  # T[max]: 369
+  Group: CB-(CB)2(Br)
+  a[i]: 1.93683
+  b[i]: 1.96156
+  d[i]: -0.1261815
+  T[min]: 243
+  T[max]: 369
+  Bonds:
+    - C1-Br2
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 118
-  # Group: CB(CB)2(Cl)
-  # a[i]: 7.3956
-  # b[i]: -1.9517
-  # d[i]: 0.36816
-  # T[min]: 230
-  # T[max]: 437
+  Group: CB(CB)2(Cl)
+  a[i]: 7.3956
+  b[i]: -1.9517
+  d[i]: 0.36816
+  T[min]: 230
+  T[max]: 437
+  Bonds:
+    - C1-Cl2
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 119
-  # Group: CB-(CB)2(F)
-  # a[i]: 1.72466
-  # b[i]: 1.33975
-  # d[i]: -0.149748
-  # T[min]: 211
-  # T[max]: 490
+  Group: CB-(CB)2(F)
+  a[i]: 1.72466
+  b[i]: 1.33975
+  d[i]: -0.149748
+  T[min]: 211
+  T[max]: 490
+  Bonds:
+    - C1-F2
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 120
-  # Group: CB-(CB)2(I)
-  # a[i]: 2.76962
-  # b[i]: 2.81671
-  # d[i]: -0.563751
-  # T[min]: 250
-  # T[max]: 320
+  Group: CB-(CB)2(I)
+  a[i]: 2.76962
+  b[i]: 2.81671
+  d[i]: -0.563751
+  T[min]: 250
+  T[max]: 320
+  Bonds:
+    - C1-I2
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 121
   Group: C-(H)3(S)
   a[i]: 12.5083
@@ -1461,14 +1517,18 @@
     - C1-C3
     - C1-C4
     - C4-S5
-# FIXME
 - No.: 125
-  # Group: CB-(CB)2(S)
-  # a[i]: 2.22865
-  # b[i]: 0.466465
-  # d[i]: -1.96673
-  # T[min]: 239
-  # T[max]: 700
+  Group: CB-(CB)2(S)
+  a[i]: 2.22865
+  b[i]: 0.466465
+  d[i]: -1.96673
+  T[min]: 239
+  T[max]: 700
+  Bonds:
+    - C1-S2
+    - C1*{Chain1}
+  Blocks:
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 126
   Group: S-(H)(C)
   a[i]: 2.05473
@@ -1497,11 +1557,11 @@
   T[min]: 261
   T[max]: 321
   Bonds:
-    - S1-CB2
+    - S1-C2
     - S1-C3
+    - C3*{Chain1}
   Blocks:
-    - CB2: Benzene-Ring
-# FIXME
+    - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
 - No.: 129
   Group: S-(CB)2-thiophene
   a[i]: 5.77842
@@ -1511,11 +1571,11 @@
   T[max]: 344
   Functional-Group: thiophene
   Bonds:
-    - S1-CB2
-    - S1-CB3
-  Blocks:
-    - CB2: Benzene-Ring
-    - CB3: Benzene-Ring
+    - S1-C2
+    - S1-C3
+    - C2=C4
+    - C3=C5
+    - C4-C5
 - No.: 130
   Group: S-(C)(S)
   a[i]: -1.5166
