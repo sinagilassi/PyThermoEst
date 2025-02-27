@@ -233,7 +233,6 @@
     - C2=XX3
   Blocks:
     - Chain1: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
-# REVIEW
 - No.: 21
   Group: CB-(CB)
   a[i]: -5.12997
@@ -241,7 +240,13 @@
   d[i]: -0.595745
   T[min]: 273
   T[max]: 770
-  Parent: None
+  Parent-Bonds:
+    - C1*{Chain1}
+    - C1-C2
+    - C2*{Chain2}
+  Parent-Blocks:
+    - Chain1: ["*-C1", "C1=C2", "C2-C3", "C3=C4", "C4-C5", "C5=*"]
+    - Chain2: ["*=C1", "C1-C2", "C2=C3", "C3-C4", "C4=C5", "C5-*"]
   Bonds:
     - C1-C2
     - C1*{Chain1}
