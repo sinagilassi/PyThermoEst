@@ -1,18 +1,18 @@
-# MOLE CORE
-
-# import packages/modules
+# TOOLS
+# ----------------------
+# import libs
 import os
 import yaml
 
 
-# local
-
-
-class MolCore:
+class SourceLoader:
+    '''
+    Used to load reference files.
+    '''
     def __init__(self):
         pass
-
-    def load_yml_ref(self, reference_name):
+    
+    def load_yml_ref(self, reference_name, reference_folder, current_path, parent_path):
         '''
         Loads YAML reference file.
 
@@ -27,14 +27,9 @@ class MolCore:
             Dictionary of the reference file.
         '''
         try:
-            # load reference file
-            # current file path
-            current_path = os.path.dirname(os.path.abspath(__file__))
-            # parent path
-            parent_path = os.path.abspath(os.path.join(current_path))
             # reference path
             reference_path = os.path.join(
-                parent_path, 'reference', reference_name)
+                parent_path, reference_folder, reference_name)
             # load reference file
             with open(reference_path, 'r') as f:
                 ref_dict = yaml.safe_load(f)
