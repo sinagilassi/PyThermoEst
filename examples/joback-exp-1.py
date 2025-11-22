@@ -24,9 +24,3 @@ payload = {
 }
 
 groups = JobackGroupContributions(**payload)
-
-
-group2 = JobackGroupContributions(
-    methyl=GroupUnit(value=10.5),
-    methylene=GroupUnit(value=8.2),
-)
