@@ -1,7 +1,18 @@
-from .app import (
-    estimate, __version__, __author__, __description__, __package__
+from .config import (
+    __version__,
+    __author__,
+    __description__,
+    __package__
 )
 
+from .app import joback
+
 __all__ = [
-    "estimate", "__version__", "__author__", "__description__", "__package__"
+    # config
+    "__version__",
+    "__author__",
+    "__description__",
+    "__package__",
+    # app
+    "joback",
 ]
