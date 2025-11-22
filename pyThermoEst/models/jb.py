@@ -96,32 +96,32 @@ class JobackGroupContributions(BaseModel):
     alcohol_OH: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Alcohol OH group contribution.",
-        alias="-OH (alcohol)"
+        alias="-OH @alcohol"
     )
     phenol_OH: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Phenol OH group contribution.",
-        alias="-OH (phenol)"
+        alias="-OH @phenol"
     )
     ether_nonring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Ether O (non-ring) group contribution.",
-        alias="-O- (non-ring)"
+        alias="-O- @non-ring"
     )
     ether_ring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Ether O (ring) group contribution.",
-        alias="-O- (ring)"
+        alias="-O- @ring"
     )
     carbonyl_nonring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Carbonyl C=O (non-ring) group contribution.",
-        alias=">C=O (non-ring)"
+        alias=">C=O @non-ring"
     )
     carbonyl_ring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Carbonyl C=O (ring) group contribution.",
-        alias=">C=O (ring)"
+        alias=">C=O @ring"
     )
     aldehyde: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
@@ -141,7 +141,7 @@ class JobackGroupContributions(BaseModel):
     carbonyl_other: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Carbonyl =O (other) group contribution.",
-        alias="=O (other)"
+        alias="=O @expect as above"
     )
     primary_amine: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
@@ -151,27 +151,27 @@ class JobackGroupContributions(BaseModel):
     secondary_amine_nonring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Secondary amine >NH (non-ring) group contribution.",
-        alias=">NH (non-ring)"
+        alias=">NH @non-ring"
     )
     secondary_amine_ring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Secondary amine >NH (ring) group contribution.",
-        alias=">NH (ring)"
+        alias=">NH @ring"
     )
     tertiary_amine_nonring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Tertiary amine >N- (non-ring) group contribution.",
-        alias=">N- (non-ring)"
+        alias=">N- @non-ring"
     )
     imine_nonring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Imine -N= (non-ring) group contribution.",
-        alias="-N= (non-ring)"
+        alias="-N= @non-ring"
     )
     imine_ring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Imine -N= (ring) group contribution.",
-        alias="-N= (ring)"
+        alias="-N= @ring"
     )
     imine_secondary: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
@@ -196,10 +196,10 @@ class JobackGroupContributions(BaseModel):
     thioether_nonring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Thioether -S- (non-ring) group contribution.",
-        alias="-S- (non-ring)"
+        alias="-S- @non-ring"
     )
     thioether_ring: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0),
         description="Thioether -S- (ring) group contribution.",
-        alias="-S- (ring)"
+        alias="-S- @ring"
     )
