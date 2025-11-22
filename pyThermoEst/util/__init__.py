@@ -1,1 +1,5 @@
-from .tools import SourceLoader
+from .tools import ReferenceLoader
+
+__all__ = [
+    'ReferenceLoader',
+]
