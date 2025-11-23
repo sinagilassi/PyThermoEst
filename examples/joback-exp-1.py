@@ -18,6 +18,8 @@ payload = {
 contributions = JobackGroupContributions(
     **payload
 )
+# log
+print(contributions)
 
 payload = {
     "-CH3": GroupUnit(value=10.5),
@@ -26,7 +28,8 @@ payload = {
 }
 
 groups = JobackGroupContributions(**payload)
+# log
+print(groups)
+print(groups.methyl)
+print(groups.model_dump(by_alias=True))
 
-# SECTION: Calculate Joback properties
-result = joback_calc(groups=groups)
-print("Group Contributions:", result)

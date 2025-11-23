@@ -1,7 +1,8 @@
 from .info import (
     __author__,
     __description__,
-    __package__,
+    __email__,
+    __license__,
     __version__,
 )
 
@@ -13,7 +14,8 @@ from .settings import (
 __all__ = [
     "__author__",
     "__description__",
-    "__package__",
+    "__email__",
+    "__license__",
     "__version__",
     "JOBACK_DATA_FILE",
     "JOBACK_TABLE_COLUMN_GROUP",
