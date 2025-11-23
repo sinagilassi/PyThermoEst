@@ -5,7 +5,7 @@ from .config import (
     __package__
 )
 
-from .app import joback
+from .app import joback_calc
 
 __all__ = [
     # config
@@ -14,5 +14,5 @@ __all__ = [
     "__description__",
     "__package__",
     # app
-    "joback",
+    "joback_calc",
 ]
