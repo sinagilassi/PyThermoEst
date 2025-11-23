@@ -309,12 +309,21 @@ wheels = [
 [[package]]
 name = "pythermoest"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "pandas" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "rich" },
+]
+
+[package.dev-dependencies]
+dev = [
     { name = "rich" },
 ]
 
@@ -324,8 +333,12 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.12.4" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "rich", specifier = ">=14.2.0" },
+    { name = "rich", marker = "extra == 'dev'", specifier = ">=14.2.0" },
 ]
+provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "rich", specifier = ">=14.2.0" }]
 
 [[package]]
 name = "python-dateutil"
