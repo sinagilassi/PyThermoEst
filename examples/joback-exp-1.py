@@ -1,9 +1,11 @@
 # import libs
-from pyThermoEst import joback
+import pyThermoEst
+from pyThermoEst import joback_calc
 from pyThermoEst.models import JobackGroupContributions, GroupUnit
+from rich import print
 
-import pydantic
-print(pydantic.__version__)
+# version
+print(f"pyThermoEst version: {pyThermoEst.__version__}")
 
 # SECTION: Example Joback Group Contributions Usage
 # NOTE: group data
@@ -24,3 +26,7 @@ payload = {
 }
 
 groups = JobackGroupContributions(**payload)
+
+# SECTION: Calculate Joback properties
+result = joback_calc(groups=groups)
+print("Group Contributions:", result)

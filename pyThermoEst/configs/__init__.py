@@ -6,7 +6,7 @@ from .config import (
 )
 
 # settings
-from .setting import (
+from .settings import (
     JOBACK_DATA_FILE,
     JOBACK_TABLE_COLUMN_GROUP,
 )

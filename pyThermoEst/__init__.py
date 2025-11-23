@@ -1,4 +1,4 @@
-from .config import (
+from .configs import (
     __version__,
     __author__,
     __description__,

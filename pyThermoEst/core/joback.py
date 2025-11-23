@@ -5,7 +5,7 @@ import os
 # locals
 from ..models import JobackGroupContributions, GroupUnit
 from ..util import ReferenceLoader
-from ..config import JOBACK_DATA_FILE, JOBACK_TABLE_COLUMN_GROUP
+from ..configs import JOBACK_DATA_FILE, JOBACK_TABLE_COLUMN_GROUP
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
