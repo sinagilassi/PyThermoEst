@@ -1,10 +1,11 @@
 # import libs
 import logging
+from typing import Dict
 import os
 # locals
-from ..models import JobackGroupContributions
+from ..models import JobackGroupContributions, GroupUnit
 from ..util import ReferenceLoader
-from ..config import JOBACK_DATA_FILE
+from ..config import JOBACK_DATA_FILE, JOBACK_TABLE_COLUMN_GROUP
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
@@ -21,22 +22,41 @@ class Joback:
     '''
 
     def __init__(
-            self,
-            group_contributions: JobackGroupContributions
+        self,
+        group_contributions: JobackGroupContributions | Dict[str, float],
     ):
         '''
         Initializes Joback method with group contributions.
 
         Parameters
         ----------
-        group_contributions : JobackGroupContributions
+        group_contributions : JobackGroupContributions | Dict[str, float]
             Group contributions for Joback method.
         '''
         # NOTE: group contributions
         self.group_contributions = group_contributions
 
-        # NOTE: load Joback parameters
+        # SECTION: load Joback parameters
         self.joback_params = self.load_joback_parameters()
+
+        # SECTION: get group contribution
+        self.group_id = self._get_group_contribution()
+
+    def __repr__(self) -> str:
+        return f"""Joback Method with {len(self.group_id)} groups  \n
+        Group Contributions: {self.group_contributions} """
+
+    @property
+    def group_contribution_idx(self):
+        '''
+        Returns the group contribution index.
+
+        Returns
+        -------
+        group_id : dict
+            Dictionary of group contributions.
+        '''
+        return self.group_id
 
     def load_joback_parameters(
         self,
@@ -72,3 +92,133 @@ class Joback:
             return joback_df
         except Exception as e:
             raise Exception("Loading Joback parameters failed!, ", e)
+
+    def _get_group_contribution(
+        self,
+    ):
+        '''
+        Gets group contribution for a specific group.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        contribution : dict
+            Dictionary of group contributions for various properties.
+        '''
+        try:
+            # filter Joback parameters for the specific group
+            group_data = self.joback_params[
+                JOBACK_TABLE_COLUMN_GROUP
+            ]
+
+            # extract contributions
+            contribution = group_data.to_dict()
+
+            return contribution
+        except Exception as e:
+            raise Exception(f"Getting contribution for group failed!, ", e)
+
+    def list_available_groups(
+        self,
+    ):
+        '''
+        Lists all available Joback groups.
+
+        Returns
+        -------
+        groups : list
+            List of available Joback groups.
+        '''
+        try:
+            # get list of available groups
+            groups = self.joback_params[JOBACK_TABLE_COLUMN_GROUP].tolist()
+
+            return groups
+        except Exception as e:
+            raise Exception("Listing available Joback groups failed!, ", e)
+
+    def _get_group_contribution_data(
+        self,
+        group_name: str,
+    ):
+        '''
+        Gets contribution data for a specific group.
+
+        Parameters
+        ----------
+        group_name : str
+            Name of the group.
+
+        Returns
+        -------
+        group_data : dict
+            Dictionary of contribution data for the group with header names as keys.
+        '''
+        try:
+            # filter Joback parameters for the specific group
+            group_data = self.joback_params[
+                self.joback_params[JOBACK_TABLE_COLUMN_GROUP] == group_name
+            ]
+
+            # convert to Series and then to dictionary with column headers as keys
+            return group_data.iloc[0].to_dict() if len(group_data) > 0 else {}
+        except Exception as e:
+            raise Exception(
+                f"Getting contribution data for group {group_name} failed!, ", e)
+
+    def _check_group_contributions(
+            self
+    ) -> Dict[str, float]:
+        """
+        Checks the validity of group contributions.
+        """
+        try:
+            # NOTE: count occurrences
+            valid_groups = {}
+
+            # count each group
+            if isinstance(self.group_contributions, dict):
+                # ! dictionary type
+                # iterate over group contributions
+                for group_name, group_value in self.group_contributions.items():
+                    # check if group exists in Joback parameters
+                    if group_name in self.group_id.values():
+                        # add to count dictionary
+                        valid_groups[group_name] = {
+                            'count': group_value,
+                            'data': self._get_group_contribution_data(group_name)
+                        }
+            elif isinstance(self.group_contributions, JobackGroupContributions):
+                # ! dataclass type
+                # iterate over dataclass fields
+                for field_name, field_info in JobackGroupContributions.model_fields.items():
+                    # get field alias (Joback group name)
+                    alias = field_info.alias
+
+                    # check if field is None
+                    if alias is None:
+                        continue
+
+                    # value stored in the model instance = use field_name
+                    group_unit: GroupUnit = getattr(
+                        self.group_contributions, field_name)
+
+                    # check if group value is greater than 0
+                    if group_unit.value > 0:
+                        # check if group exists in Joback parameters
+                        if alias in self.group_id.values():
+                            # add to count dictionary
+                            valid_groups[alias] = {
+                                'count': group_unit.value,
+                                'data': self._get_group_contribution_data(field_name)
+                            }
+            else:
+                logger.error("Invalid type for group contributions!")
+                return valid_groups
+
+            return valid_groups
+        except Exception as e:
+            raise Exception("Checking group contributions failed!, ", e)
