@@ -1,16 +1,8 @@
 # import libs
 from typing import Optional, Dict
 from pydantic import BaseModel, Field, ConfigDict
-
-# NOTE: Quantity
-
-
-class GroupUnit(BaseModel):
-    """A class to represent a physical quantity with a value and unit."""
-    value: float = Field(
-        0,
-        description="The numerical value of the quantity."
-    )
+# local
+from .ref import GroupUnit
 
 # SECTION: Joback Group Contributions
 
@@ -228,12 +220,14 @@ class JobackGroupContributions(BaseModel):
         alias="-S- @ring"
     )
 
+
 class JobackGroupData(BaseModel):
     """A class to represent a Joback group with its name and contribution data."""
     id: str
     name: str
     count: float
     data: Dict[str, str]
+
 
 class JobackHeatCapacity(BaseModel):
     a: float = Field(..., description="Cp correlation parameter a")
