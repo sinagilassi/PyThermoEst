@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import Dict
+from typing import Dict, Any
 from math import pow
 import os
 # locals
@@ -8,9 +8,15 @@ from ..models import (
     GroupUnit,
     ZabranskyRuzickaGroupContributions,
     ZabranskyRuzickaGroupContributionsCorrections,
+    ZabranskyRuzickaGroupData
 )
 from ..util import ReferenceLoader
-from ..configs import JOBACK_DATA_FILE, JOBACK_TABLE_COLUMN_GROUP
+from ..configs import (
+    ZABRANSKY_RUZICKA_DATA_FILE_1,
+    ZABRANSKY_RUZICKA_DATA_FILE_2,
+    ZABRANSKY_RUZICKA_TABLE_COLUMN_GROUP,
+    ZABRANSKY_RUZICKA_REFERENCE
+)
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
@@ -34,25 +40,38 @@ class ZabranskyRuzicka:
         ----------
         group_contributions : ZabranskyRuzickaGroupContributions | Dict[str, float]
             Group contributions for the compound.
-        group_corrections : ZabranskyRuzickaGroupContributionsCorrections | Dict[str, float] | None
+        group_corrections : ZabranskyRuzickaGroupContributionsCorrections | Dict[
+            str, float] | None
             Group corrections for the compound.
         '''
         # NOTE: group contributions
         self.group_contributions = group_contributions
         self.group_corrections = group_corrections
 
-        # SECTION: load Joback parameters
-        self.joback_params = self.load_joback_parameters()
+        # SECTION: load parameters
+        self.params, self.corrections = self.load_parameters()
 
         # SECTION: get group contribution
         self.group_id = self._get_group_contribution()
 
         # SECTION: valid groups
-        self.valid_groups = self._check_group_contributions()
+        self.valid_group_contribution = self._check_group_contributions(
+            group_contributions)
+        self.valid_group_corrections = self._check_group_contributions(
+            group_corrections) if group_corrections is not None else {}
+
+        # >> merge valid groups
+        self.valid_groups = {
+            **self.valid_group_contribution,
+            **self.valid_group_corrections
+        }
 
     def __repr__(self) -> str:
-        return f"""Joback Method with {len(self.group_id)} groups  \n
-        Group Contributions: {self.group_contributions} """
+        return f"""Zabransky Ruzicka Method: \n
+        Group Contributions: {self.group_contributions} \n
+        Group Corrections: {self.group_corrections}  \n
+        Reference: {ZABRANSKY_RUZICKA_REFERENCE}
+        """
 
     @property
     def group_contribution_idx(self):
@@ -66,16 +85,16 @@ class ZabranskyRuzicka:
         '''
         return self.group_id
 
-    def load_joback_parameters(
+    def load_parameters(
         self,
     ):
         '''
-        Loads Joback parameters from reference file.
+        Loads parameters from reference file.
 
         Returns
         -------
-        joback_params : pd.DataFrame
-            DataFrame of Joback parameters.
+        params_df, corrections_df : pd.DataFrame, pd.DataFrame
+            DataFrames of parameters and corrections.
         '''
         try:
             # load reference file
@@ -91,15 +110,21 @@ class ZabranskyRuzicka:
             )
 
             # NOTE: load CSV reference
-            joback_df = ref_loader.load_csv_ref(
-                reference_name=JOBACK_DATA_FILE,
+            params_df = ref_loader.load_csv_ref(
+                reference_name=ZABRANSKY_RUZICKA_DATA_FILE_1,
                 reference_folder=data_folder,
             )
 
-            # return Joback parameters
-            return joback_df
+            # NOTE: corrections
+            corrections_df = ref_loader.load_csv_ref(
+                reference_name=ZABRANSKY_RUZICKA_DATA_FILE_2,
+                reference_folder=data_folder,
+            )
+
+            # return parameters dataframe
+            return params_df, corrections_df
         except Exception as e:
-            raise Exception("Loading Joback parameters failed!, ", e)
+            raise Exception("Loading  parameters failed!, ", e)
 
     def _get_group_contribution(
         self,
@@ -117,9 +142,9 @@ class ZabranskyRuzicka:
             Dictionary of group contributions for various properties.
         '''
         try:
-            # filter Joback parameters for the specific group
-            group_data = self.joback_params[
-                JOBACK_TABLE_COLUMN_GROUP
+            # filter  parameters for the specific group
+            group_data = self.params[
+                ZABRANSKY_RUZICKA_TABLE_COLUMN_GROUP
             ]
 
             # extract contributions
@@ -129,24 +154,53 @@ class ZabranskyRuzicka:
         except Exception as e:
             raise Exception(f"Getting contribution for group failed!, ", e)
 
+    def _get_correction_contribution(
+        self,
+    ):
+        '''
+        Gets correction contribution for a specific group.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        contribution : dict
+            Dictionary of correction contributions for various properties.
+        '''
+        try:
+            # filter  corrections for the specific group
+            correction_data = self.corrections[
+                ZABRANSKY_RUZICKA_TABLE_COLUMN_GROUP
+            ]
+
+            # extract contributions
+            contribution = correction_data.to_dict()
+
+            return contribution
+        except Exception as e:
+            raise Exception(
+                f"Getting correction contribution for group failed!, ", e)
+
     def list_available_groups(
         self,
     ):
         '''
-        Lists all available Joback groups.
+        Lists all available  groups.
 
         Returns
         -------
         groups : list
-            List of available Joback groups.
+            List of available  groups.
         '''
         try:
             # get list of available groups
-            groups = self.joback_params[JOBACK_TABLE_COLUMN_GROUP].tolist()
+            groups = self.params[ZABRANSKY_RUZICKA_TABLE_COLUMN_GROUP].tolist()
 
             return groups
         except Exception as e:
-            raise Exception("Listing available Joback groups failed!, ", e)
+            raise Exception("Listing available  groups failed!, ", e)
 
     def _get_group_contribution_data(
         self,
@@ -166,9 +220,9 @@ class ZabranskyRuzicka:
             Dictionary of contribution data for the group with header names as keys.
         '''
         try:
-            # filter Joback parameters for the specific group
-            group_data = self.joback_params[
-                self.joback_params[JOBACK_TABLE_COLUMN_GROUP] == group_name.strip(
+            # filter  parameters for the specific group
+            group_data = self.params[
+                self.params[ZABRANSKY_RUZICKA_TABLE_COLUMN_GROUP] == group_name.strip(
                 )
             ]
 
@@ -179,8 +233,10 @@ class ZabranskyRuzicka:
                 f"Getting contribution data for group {group_name} failed!, ", e)
 
     def _check_group_contributions(
-            self
-    ) -> Dict[str, JobackGroupData]:
+            self,
+            group_data: Dict[str, Any] | ZabranskyRuzickaGroupContributions |
+        ZabranskyRuzickaGroupContributionsCorrections
+    ) -> Dict[str, ZabranskyRuzickaGroupData]:
         """
         Checks the validity of group contributions.
         """
@@ -193,10 +249,10 @@ class ZabranskyRuzicka:
                 # ! dictionary type
                 # iterate over group contributions
                 for group_name, group_value in self.group_contributions.items():
-                    # check if group exists in Joback parameters
+                    # check if group exists in  parameters
                     if group_name in self.group_id.values():
                         # add to count dictionary
-                        res_ = JobackGroupData(
+                        res_ = ZabranskyRuzickaGroupData(
                             id=group_name,
                             name=group_name,
                             count=float(group_value),
@@ -204,11 +260,16 @@ class ZabranskyRuzicka:
                         )
                         # append
                         valid_groups[group_name] = res_
-            elif isinstance(self.group_contributions, JobackGroupContributions):
+            elif isinstance(
+                self.group_contributions, (
+                    ZabranskyRuzickaGroupContributions,
+                    ZabranskyRuzickaGroupContributionsCorrections
+                )
+            ):
                 # ! dataclass type
                 # iterate over dataclass fields
-                for field_name, field_info in JobackGroupContributions.model_fields.items():
-                    # get field alias (Joback group name)
+                for field_name, field_info in ZabranskyRuzickaGroupContributions.model_fields.items():
+                    # get field alias ( group name)
                     alias = field_info.alias
 
                     # check if field is None
@@ -223,10 +284,10 @@ class ZabranskyRuzicka:
 
                     # check if group value is greater than 0
                     if group_unit.value > 0:
-                        # check if group exists in Joback parameters
+                        # check if group exists in  parameters
                         if alias in self.group_id.values():
                             # add to count dictionary
-                            res_ = JobackGroupData(
+                            res_ = ZabranskyRuzickaGroupData(
                                 id=alias,
                                 name=field_name,
                                 count=float(group_unit.value),
@@ -254,19 +315,9 @@ class ZabranskyRuzicka:
             # SECTION: calculate sigma
             # initialize critical temperature
             sigma = {
-                'Tc': 0.0,
-                'Pc': 0.0,
-                'Vc': 0.0,
-                'Tb': 0.0,
-                'Tf': 0.0,
-                'EnFo_IG': 0.0,
-                'GiEnFo_IG': 0.0,
-                'a': 0.0,
-                'b': 0.0,
-                'c': 0.0,
-                'd': 0.0,
-                'EnFus': 0.0,
-                'EnVap': 0.0
+                'a[i]': 0.0,
+                'b[i]': 0.0,
+                'c[i]': 0.0,
             }
 
             # iterate over valid groups
@@ -276,71 +327,20 @@ class ZabranskyRuzicka:
                 # get contribution data
                 contribution_data = group_info.data
                 # get contribution
-                val_Tc = contribution_data.get('Tc', None)
-                val_Pc = contribution_data.get('Pc', None)
-                val_Vc = contribution_data.get('Vc', None)
-                val_Tb = contribution_data.get('Tb', None)
-                val_Tm = contribution_data.get('Tf', None)
-                val_EnFo_IG = contribution_data.get('EnFo_IG', None)
-                val_GiEnFo_IG = contribution_data.get('GiEnFo_IG', None)
-                val_a = contribution_data.get('a', None)
-                val_b = contribution_data.get('b', None)
-                val_c = contribution_data.get('c', None)
-                val_d = contribution_data.get('d', None)
-                val_EnFus = contribution_data.get('EnFus', None)
-                val_EnVap = contribution_data.get('EnVap', None)
+                val_a_i = contribution_data.get('a[i]', None)
+                val_b_i = contribution_data.get('b[i]', None)
+                val_c_i = contribution_data.get('c[i]', None)
 
                 # check if contribution is valid
-                if val_Tc is not None:
-                    # update critical temperature
-                    sigma['Tc'] += group_count * float(val_Tc)
-
-                if val_Pc is not None:
-                    # update critical temperature
-                    sigma['Pc'] += group_count * float(val_Pc)
-
-                if val_Vc is not None:
-                    # update critical temperature
-                    sigma['Vc'] += group_count * float(val_Vc)
-
-                if val_Tb is not None:
-                    # update critical temperature
-                    sigma['Tb'] += group_count * float(val_Tb)
-
-                if val_Tm is not None:
-                    # update critical temperature
-                    sigma['Tf'] += group_count * float(val_Tm)
-
-                if val_EnFo_IG is not None:
-                    # update critical temperature
-                    sigma['EnFo_IG'] += group_count * float(val_EnFo_IG)
-
-                if val_GiEnFo_IG is not None:
-                    # update critical temperature
-                    sigma['GiEnFo_IG'] += group_count * float(val_GiEnFo_IG)
-
-                if val_a is not None:
-                    # update critical temperature
-                    sigma['a'] += group_count * float(val_a)
-
-                if val_b is not None:
-                    # update critical temperature
-                    sigma['b'] += group_count * float(val_b)
-
-                if val_c is not None:
-                    # update critical temperature
-                    sigma['c'] += group_count * float(val_c)
-
-                if val_d is not None:
-                    # update critical temperature
-                    sigma['d'] += group_count * float(val_d)
-
-                if val_EnFus is not None:
-                    # update critical temperature
-                    sigma['EnFus'] += group_count * float(val_EnFus)
-
-                if val_EnVap is not None:
-                    sigma['EnVap'] += group_count * float(val_EnVap)
+                if (
+                    val_a_i is not None and
+                    val_b_i is not None and
+                    val_c_i is not None
+                ):
+                    # calculate sigma contributions
+                    sigma['a[i]'] += group_count * float(val_a_i)
+                    sigma['b[i]'] += group_count * float(val_b_i)
+                    sigma['c[i]'] += group_count * float(val_c_i)
 
             return sigma
         except Exception as e:
@@ -350,7 +350,7 @@ class ZabranskyRuzicka:
             self
     ):
         '''
-        Calculates properties using Joback method.
+        Calculates properties using  method.
 
         Returns
         -------
@@ -365,373 +365,6 @@ class ZabranskyRuzicka:
             # SECTION: calculate sigma
             sigma = self._calc_sigma()
 
-            # NOTE: freezing point temperature
-            properties['freezing_point_temperature'] = \
-                self._calc_freezing_point_temperature(sigma)
-
-            # NOTE: boiling point temperature
-            boiling_point_temp = self._calc_boiling_point_temperature(sigma)
-            properties['boiling_point_temperature'] = boiling_point_temp
-
-            # NOTE: critical temperature
-            properties['critical_temperature'] = \
-                self._calc_critical_temperature(
-                    sigma,
-                    boiling_point_temperature=boiling_point_temp['value'] if boiling_point_temp else None
-            )
-
-            # NOTE: critical pressure
-            properties['critical_pressure'] = \
-                self._calc_critical_pressure(sigma)
-
-            # NOTE: critical volume
-            properties['critical_volume'] = \
-                self._calc_critical_volume(sigma)
-
-            # NOTE: standard enthalpy of formation in ideal gas
-            properties['standard_enthalpy_of_formation_ideal_gas'] = \
-                self._calc_standard_enthalpy_of_formation_ideal_gas(sigma)
-
-            # NOTE: standard Gibbs energy of formation in ideal gas
-            properties['standard_gibbs_energy_of_formation_ideal_gas'] = \
-                self._calc_standard_gibbs_energy_of_formation_ideal_gas(sigma)
-
-            # NOTE: standard enthalpy of fusion
-            properties['standard_enthalpy_of_fusion'] = \
-                self._calc_standard_enthalpy_of_fusion(sigma)
-
-            # NOTE: standard enthalpy of vaporization
-            properties['standard_enthalpy_of_vaporization'] = \
-                self._calc_standard_enthalpy_of_vaporization(sigma)
-
-            # NOTE: heat capacity function
-            properties['heat_capacity'] = \
-                self._calc_heat_capacity(sigma)
-
             return properties
         except Exception as e:
             raise Exception("Calculating properties failed!, ", e)
-
-    def _calc_freezing_point_temperature(
-            self,
-            sigma: Dict[str, float]
-    ):
-        """
-        Calculates the freezing point temperature using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        Tf : Dict
-            Freezing point temperature (K).
-        """
-        try:
-            # calc
-            Tf = 122.5 + sigma['Tf']
-            return {
-                'value': Tf,
-                'unit': 'K',
-                'symbol': 'Tf'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating freezing point temperature failed!, {e}")
-            return None
-
-    def _calc_boiling_point_temperature(
-            self,
-            sigma: Dict[str, float]
-    ):
-        """
-        Calculates the boiling point temperature using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        Tb : dict
-            Boiling point temperature (K).
-        """
-        try:
-            # calc
-            Tb = 198.2 + sigma['Tb']
-            return {
-                'value': Tb,
-                'unit': 'K',
-                'symbol': 'Tb'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating boiling point temperature failed!, {e}")
-            return None
-
-    def _calc_critical_temperature(
-            self,
-            sigma: Dict[str, float],
-            boiling_point_temperature: float | None
-    ):
-        """
-        Calculates the critical temperature using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-        boiling_point_temperature : float
-            Boiling point temperature.
-
-        Returns
-        -------
-        Tc : dict
-            Critical temperature (K).
-        """
-        try:
-            # check
-            if boiling_point_temperature is None:
-                logger.error(
-                    f"Boiling point temperature is required for calculating critical temperature!")
-                return None
-
-            # calc
-            Tc = boiling_point_temperature / (
-                0.584 +
-                0.965 * sigma['Tc'] -
-                sigma['Tc'] ** 2
-            )
-            return {
-                'value': Tc,
-                'unit': 'K',
-                'symbol': 'Tc'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating critical temperature failed!, {e}")
-            return None
-
-    def _calc_critical_pressure(
-            self,
-            sigma: Dict[str, float],
-    ):
-        """
-        Calculates the critical pressure using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        Pc: dict
-            Critical pressure (bar).
-        """
-        try:
-            # calc
-            Pc = pow(
-                0.113 +
-                0.0032 * self.total_atoms_number -
-                sigma['Pc'],
-                -2
-            )
-            return {
-                'value': Pc,
-                'unit': 'bar',
-                'symbol': 'Pc'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating critical pressure failed!, {e}")
-            return None
-
-    def _calc_critical_volume(
-            self,
-            sigma: Dict[str, float],
-    ):
-        """
-        Calculates the critical volume using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        Vc : dict
-            Critical volume (cm³/mol).
-        """
-        try:
-            # calc
-            Vc = 17.5 + sigma['Vc']
-            return {
-                'value': Vc,
-                'unit': 'cm3/mol',
-                'symbol': 'Vc'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating critical volume failed!, {e}")
-            return None
-
-    def _calc_standard_enthalpy_of_formation_ideal_gas(
-            self,
-            sigma: Dict[str, float],
-    ):
-        """
-        Calculates the standard enthalpy of formation in ideal gas using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        EnFo_IG : dict
-            Standard enthalpy of formation in ideal gas (kJ/mol).
-        """
-        try:
-            # calc
-            EnFo_IG = 68.29 + sigma['EnFo_IG']
-            return {
-                'value': EnFo_IG,
-                'unit': 'kJ/mol',
-                'symbol': 'EnFo_IG'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating standard enthalpy of formation in ideal gas failed!, {e}")
-            return None
-
-    def _calc_standard_gibbs_energy_of_formation_ideal_gas(
-            self,
-            sigma: Dict[str, float],
-    ):
-        """
-        Calculates the standard Gibbs energy of formation in ideal gas using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        GiEnFo_IG : dict
-            Standard Gibbs energy of formation in ideal gas (kJ/mol).
-        """
-        try:
-            # calc
-            GiEnFo_IG = 53.88 + sigma['GiEnFo_IG']
-            return {
-                'value': GiEnFo_IG,
-                'unit': 'kJ/mol',
-                'symbol': 'GiEnFo_IG'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating standard Gibbs energy of formation in ideal gas failed!, {e}")
-            return None
-
-    def _calc_standard_enthalpy_of_fusion(
-            self,
-            sigma: Dict[str, float],
-    ):
-        """
-        Calculates the standard enthalpy of fusion using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        EnFus : dict
-            Standard enthalpy of fusion (kJ/mol).
-        """
-        try:
-            # calc
-            EnFus = -0.88 + sigma['EnFus']
-            return {
-                'value': EnFus,
-                'unit': 'kJ/mol',
-                'symbol': 'EnFus'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating standard enthalpy of fusion failed!, {e}")
-            return None
-
-    def _calc_standard_enthalpy_of_vaporization(
-            self,
-            sigma: Dict[str, float],
-    ):
-        """
-        Calculates the standard enthalpy of vaporization using Joback method.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        EnVap : dict
-            Standard enthalpy of vaporization (kJ/mol).
-        """
-        try:
-            # calc
-            EnVap = 15.30 + sigma['EnVap']
-            return {
-                'value': EnVap,
-                'unit': 'kJ/mol',
-                'symbol': 'EnVap'
-            }
-        except Exception as e:
-            logger.error(
-                f"Calculating standard enthalpy of vaporization failed!, {e}")
-            return None
-
-    def _calc_heat_capacity(
-            self,
-            sigma: Dict[str, float],
-    ):
-        """
-        Create a placeholder for heat capacity calculation.
-
-        Parameters
-        ----------
-        sigma : Dict[str, float]
-            Dictionary of sigma values.
-
-        Returns
-        -------
-        Cp_func : dict
-            Heat capacity function Cp(T).
-        """
-        try:
-            # create heat capacity function
-            res_ = JobackHeatCapacity(
-                a=sigma['a'],
-                b=sigma['b'],
-                c=sigma['c'],
-                d=sigma['d']
-            )
-
-            return {
-                'value': res_.Cp,
-                'unit': 'J/mol·K',
-                'symbol': 'Cp_IG'
-            }
-        except Exception as e:
-            logger.error(
-                f"Creating heat capacity function failed!, {e}")
-            return None

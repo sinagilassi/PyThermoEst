@@ -9,7 +9,8 @@ from .jb import (
 # zabransky ruzicka
 from .zr import (
     ZabranskyRuzickaGroupContributions,
-    ZabranskyRuzickaGroupContributionsCorrections
+    ZabranskyRuzickaGroupContributionsCorrections,
+    ZabranskyRuzickaGroupData
 )
 
 __all__ = [

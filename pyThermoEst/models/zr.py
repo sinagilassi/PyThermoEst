@@ -726,3 +726,11 @@ class ZabranskyRuzickaGroupContributionsCorrections(BaseModel):
         default_factory=lambda: GroupUnit(value=0), alias="Ortho-")
     META: Optional[GroupUnit] = Field(
         default_factory=lambda: GroupUnit(value=0), alias="Meta-")
+
+
+class ZabranskyRuzickaGroupData(BaseModel):
+    """A class to represent a Zabransky Ruzicka group with its name and contribution data."""
+    id: str
+    name: str
+    count: float
+    data: Dict[str, str]
