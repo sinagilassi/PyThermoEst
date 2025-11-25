@@ -9,7 +9,7 @@ from ..models import (
     GroupUnit,
     JobackGroupData,
     JobackHeatCapacity
-    )
+)
 from ..util import ReferenceLoader
 from ..configs import JOBACK_DATA_FILE, JOBACK_TABLE_COLUMN_GROUP
 
@@ -172,11 +172,12 @@ class Joback:
         try:
             # filter Joback parameters for the specific group
             group_data = self.joback_params[
-                self.joback_params[JOBACK_TABLE_COLUMN_GROUP] == group_name.strip()
+                self.joback_params[JOBACK_TABLE_COLUMN_GROUP] == group_name.strip(
+                )
             ]
 
             # convert to Series and then to dictionary with column headers as keys
-            return group_data.iloc[0].to_dict() if len(group_data) > 0 else {}
+            return {k: str(v) for k, v in group_data.iloc[0].to_dict().items()} if len(group_data) > 0 else {}
         except Exception as e:
             raise Exception(
                 f"Getting contribution data for group {group_name} failed!, ", e)
@@ -222,7 +223,7 @@ class Joback:
                     group_unit: GroupUnit = getattr(
                         self.group_contributions,
                         field_name
-                        )
+                    )
 
                     # check if group value is greater than 0
                     if group_unit.value > 0:
@@ -245,7 +246,6 @@ class Joback:
             return valid_groups
         except Exception as e:
             raise Exception("Checking group contributions failed!, ", e)
-
 
     def _calc_sigma(
             self
@@ -382,7 +382,7 @@ class Joback:
                 self._calc_critical_temperature(
                     sigma,
                     boiling_point_temperature=boiling_point_temp['value'] if boiling_point_temp else None
-                )
+            )
 
             # NOTE: critical pressure
             properties['critical_pressure'] = \
@@ -663,7 +663,7 @@ class Joback:
         """
         try:
             # calc
-            EnFus = -0.88+ sigma['EnFus']
+            EnFus = -0.88 + sigma['EnFus']
             return {
                 'value': EnFus,
                 'unit': 'kJ/mol',
