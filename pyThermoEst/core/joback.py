@@ -8,7 +8,8 @@ from ..models import (
     JobackGroupContributions,
     GroupUnit,
     JobackGroupData,
-    JobackHeatCapacity
+    JobackHeatCapacity,
+    EstimatedProp
 )
 from ..util import ReferenceLoader
 from ..configs import JOBACK_DATA_FILE, JOBACK_TABLE_COLUMN_GROUP
@@ -29,7 +30,7 @@ class Joback:
 
     def __init__(
         self,
-        group_contributions: JobackGroupContributions | Dict[str, float],
+        group_contributions: JobackGroupContributions | Dict[str, float] | Dict[str, int],
         total_atoms_number: int,
     ):
         '''
@@ -37,7 +38,7 @@ class Joback:
 
         Parameters
         ----------
-        group_contributions : JobackGroupContributions | Dict[str, float]
+        group_contributions : JobackGroupContributions | Dict[str, float] | Dict[str, int]
             Group contributions for Joback method.
         '''
         # NOTE: group contributions
@@ -363,54 +364,66 @@ class Joback:
         '''
         try:
             # SECTION: calculate properties
-            properties = {
-            }
+            properties: Dict[str, EstimatedProp] = {}
 
             # SECTION: calculate sigma
             sigma = self._calc_sigma()
 
             # NOTE: freezing point temperature
-            properties['freezing_point_temperature'] = \
-                self._calc_freezing_point_temperature(sigma)
+            properties['freezing_point_temperature'] = EstimatedProp(
+                **self._calc_freezing_point_temperature(sigma)
+            )
 
             # NOTE: boiling point temperature
             boiling_point_temp = self._calc_boiling_point_temperature(sigma)
-            properties['boiling_point_temperature'] = boiling_point_temp
+            properties['boiling_point_temperature'] = EstimatedProp(
+                **boiling_point_temp
+            )
 
             # NOTE: critical temperature
-            properties['critical_temperature'] = \
+            res_ = \
                 self._calc_critical_temperature(
                     sigma,
                     boiling_point_temperature=boiling_point_temp['value'] if boiling_point_temp else None
+                )
+            properties['critical_temperature'] = EstimatedProp(
+                **res_
             )
 
             # NOTE: critical pressure
-            properties['critical_pressure'] = \
-                self._calc_critical_pressure(sigma)
+            properties['critical_pressure'] = EstimatedProp(
+                **self._calc_critical_pressure(sigma)
+            )
 
             # NOTE: critical volume
-            properties['critical_volume'] = \
-                self._calc_critical_volume(sigma)
+            properties['critical_volume'] = EstimatedProp(
+                **self._calc_critical_volume(sigma)
+            )
 
             # NOTE: standard enthalpy of formation in ideal gas
-            properties['standard_enthalpy_of_formation_ideal_gas'] = \
-                self._calc_standard_enthalpy_of_formation_ideal_gas(sigma)
+            properties['standard_enthalpy_of_formation_ideal_gas'] = EstimatedProp(
+                **self._calc_standard_enthalpy_of_formation_ideal_gas(sigma)
+            )
 
             # NOTE: standard Gibbs energy of formation in ideal gas
-            properties['standard_gibbs_energy_of_formation_ideal_gas'] = \
-                self._calc_standard_gibbs_energy_of_formation_ideal_gas(sigma)
+            properties['standard_gibbs_energy_of_formation_ideal_gas'] = EstimatedProp(
+                **self._calc_standard_gibbs_energy_of_formation_ideal_gas(sigma)
+            )
 
             # NOTE: standard enthalpy of fusion
-            properties['standard_enthalpy_of_fusion'] = \
-                self._calc_standard_enthalpy_of_fusion(sigma)
+            properties['standard_enthalpy_of_fusion'] = EstimatedProp(
+                **self._calc_standard_enthalpy_of_fusion(sigma)
+            )
 
             # NOTE: standard enthalpy of vaporization
-            properties['standard_enthalpy_of_vaporization'] = \
-                self._calc_standard_enthalpy_of_vaporization(sigma)
+            properties['standard_enthalpy_of_vaporization'] = EstimatedProp(
+                **self._calc_standard_enthalpy_of_vaporization(sigma)
+            )
 
             # NOTE: heat capacity function
-            properties['heat_capacity'] = \
-                self._calc_heat_capacity(sigma)
+            properties['heat_capacity'] = EstimatedProp(
+                **self._calc_heat_capacity(sigma)
+            )
 
             return properties
         except Exception as e:
@@ -444,7 +457,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating freezing point temperature failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'K', 'symbol': 'Tf'}
 
     def _calc_boiling_point_temperature(
             self,
@@ -474,7 +487,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating boiling point temperature failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'K', 'symbol': 'Tb'}
 
     def _calc_critical_temperature(
             self,
@@ -501,7 +514,7 @@ class Joback:
             if boiling_point_temperature is None:
                 logger.error(
                     f"Boiling point temperature is required for calculating critical temperature!")
-                return None
+                return {'value': None, 'unit': 'K', 'symbol': 'Tc'}
 
             # calc
             Tc = boiling_point_temperature / (
@@ -517,7 +530,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating critical temperature failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'K', 'symbol': 'Tc'}
 
     def _calc_critical_pressure(
             self,
@@ -552,7 +565,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating critical pressure failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'bar', 'symbol': 'Pc'}
 
     def _calc_critical_volume(
             self,
@@ -582,7 +595,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating critical volume failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'cm3/mol', 'symbol': 'Vc'}
 
     def _calc_standard_enthalpy_of_formation_ideal_gas(
             self,
@@ -612,7 +625,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating standard enthalpy of formation in ideal gas failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'kJ/mol', 'symbol': 'EnFo_IG'}
 
     def _calc_standard_gibbs_energy_of_formation_ideal_gas(
             self,
@@ -642,7 +655,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating standard Gibbs energy of formation in ideal gas failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'kJ/mol', 'symbol': 'GiEnFo_IG'}
 
     def _calc_standard_enthalpy_of_fusion(
             self,
@@ -672,7 +685,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating standard enthalpy of fusion failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'kJ/mol', 'symbol': 'EnFus'}
 
     def _calc_standard_enthalpy_of_vaporization(
             self,
@@ -702,7 +715,7 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Calculating standard enthalpy of vaporization failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'kJ/mol', 'symbol': 'EnVap'}
 
     def _calc_heat_capacity(
             self,
@@ -738,4 +751,4 @@ class Joback:
         except Exception as e:
             logger.error(
                 f"Creating heat capacity function failed!, {e}")
-            return None
+            return {'value': None, 'unit': 'J/mol·K', 'symbol': 'Cp_IG'}

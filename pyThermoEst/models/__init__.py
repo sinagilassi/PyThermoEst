@@ -1,5 +1,5 @@
 # ref
-from .ref import GroupUnit, Eq
+from .ref import GroupUnit, EstimatedProp
 # joback group contributions
 from .jb import (
     JobackGroupContributions,
@@ -19,5 +19,7 @@ __all__ = [
     "JobackGroupData",
     "JobackHeatCapacity",
     "ZabranskyRuzickaGroupContributions",
-    "ZabranskyRuzickaGroupContributionsCorrections"
+    "ZabranskyRuzickaGroupContributionsCorrections",
+    "ZabranskyRuzickaGroupData",
+    "EstimatedProp"
 ]

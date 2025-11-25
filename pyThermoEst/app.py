@@ -5,7 +5,8 @@ from typing import Dict, Optional
 from .models import (
     JobackGroupContributions,
     ZabranskyRuzickaGroupContributions,
-    ZabranskyRuzickaGroupContributionsCorrections
+    ZabranskyRuzickaGroupContributionsCorrections,
+    EstimatedProp
 )
 from .core import Joback, ZabranskyRuzicka
 
@@ -17,23 +18,23 @@ logger = logging.getLogger(__name__)
 # SECTION: Joback Group Contributions
 
 def joback_calc(
-    groups: JobackGroupContributions | Dict[str, float],
+    groups: JobackGroupContributions | Dict[str, int] | Dict[str, float],
     total_atoms_number: int
-):
+) -> Optional[Dict[str, EstimatedProp]]:
     """
     Using Joback method to calculate thermodynamic properties including
 
     Parameters
     ----------
-    groups : JobackGroupContributions | Dict[str, float]
+    groups : JobackGroupContributions | Dict[str, float] | Dict[str, int]
         Group contributions for Joback method.
     total_atoms_number : int
         Total number of atoms in the molecule.
 
     Returns
     -------
-    dict
-        Calculated thermodynamic properties.
+    Dict[str, EstimatedProp] | None
+        A dictionary containing calculated thermodynamic properties.
 
     Notes
     -----
@@ -61,24 +62,26 @@ def joback_calc(
 
 
 def zabransky_ruzicka_calc(
-    group_contributions: ZabranskyRuzickaGroupContributions | Dict[str, float],
+    group_contributions: ZabranskyRuzickaGroupContributions | Dict[str, float] | Dict[str, int],
     group_corrections: Optional[
-        ZabranskyRuzickaGroupContributionsCorrections | Dict[str, float]
+        ZabranskyRuzickaGroupContributionsCorrections |
+        Dict[str, float] |
+        Dict[str, int]
     ] = None
-):
+) -> Optional[EstimatedProp]:
     """
     Using Zabransky-Ruzicka method to calculate thermodynamic properties including
 
     Parameters
     ----------
-    group_contributions : ZabranskyRuzickaGroupContributions | Dict[str, float]
+    group_contributions : ZabranskyRuzickaGroupContributions | Dict[str, float] | Dict[str, int]
         Group contributions for Zabransky-Ruzicka method.
-    group_corrections : Optional[ZabranskyRuzickaGroupContributionsCorrections | Dict[str, float]]
+    group_corrections : Optional[ZabranskyRuzickaGroupContributionsCorrections | Dict[str, float] | Dict[str, int]]
         Group correction contributions for Zabransky-Ruzicka method.
 
     Returns
     -------
-    dict
+    EstimatedProp | None
         A dictionary containing calculated thermodynamic properties as:
         - value: equation to calculate heat capacity.
         - units: units of the heat capacity (J/mol.K).

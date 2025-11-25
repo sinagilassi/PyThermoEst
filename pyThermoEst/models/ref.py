@@ -1,5 +1,5 @@
 # import libs
-from typing import Callable
+from typing import Callable, TypedDict
 from pydantic import BaseModel, Field
 
 # NOTE: Quantity
@@ -15,5 +15,15 @@ class GroupUnit(BaseModel):
 
 class Eq(BaseModel):
     value: Callable[[float], float]
+    unit: str
+    symbol: str
+
+
+# SECTION: Joback Group Contributions
+
+
+# SECTION: Zabransky-Ruzicka Group Contributions
+class EstimatedProp(TypedDict):
+    value: Callable[[float], float] | float | None
     unit: str
     symbol: str

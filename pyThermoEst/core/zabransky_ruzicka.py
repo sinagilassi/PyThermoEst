@@ -9,6 +9,7 @@ from ..models import (
     ZabranskyRuzickaGroupContributions,
     ZabranskyRuzickaGroupContributionsCorrections,
     ZabranskyRuzickaGroupData,
+    EstimatedProp
 )
 from ..util import ReferenceLoader
 from ..configs import (
@@ -31,10 +32,11 @@ class ZabranskyRuzicka:
 
     def __init__(
         self,
-        group_contributions: ZabranskyRuzickaGroupContributions | Dict[str, float],
+        group_contributions: ZabranskyRuzickaGroupContributions | Dict[str, float] | Dict[str, int],
         group_corrections:  Optional[
-            ZabranskyRuzickaGroupContributionsCorrections | Dict[
-            str, float]
+            ZabranskyRuzickaGroupContributionsCorrections |
+            Dict[str, float] |
+            Dict[str, int]
         ] = None
     ):
         '''
@@ -42,10 +44,10 @@ class ZabranskyRuzicka:
 
         Parameters
         ----------
-        group_contributions : ZabranskyRuzickaGroupContributions | Dict[str, float]
+        group_contributions : ZabranskyRuzickaGroupContributions | Dict[str, float] | Dict[str, int]
             Group contributions for the compound.
         group_corrections : ZabranskyRuzickaGroupContributionsCorrections | Dict[
-            str, float] | None
+            str, float] | Dict[str, int] | None
             Group corrections for the compound.
         '''
         # NOTE: group contributions
@@ -457,13 +459,13 @@ class ZabranskyRuzicka:
 
     def _calc(
         self
-    ):
+    ) -> EstimatedProp:
         '''
         Calculates properties using  method.
 
         Returns
         -------
-        dict
+        EstimatedProp
             Calculated thermodynamic properties.
         '''
         try:
@@ -496,10 +498,10 @@ class ZabranskyRuzicka:
                 return Cp_LIQ_value
 
             # return
-            return {
-                "value": Cp_LIQ,
-                "unit": "J/mol·K",
-                "symbol": "Cp_LIQ"
-            }
+            return EstimatedProp(
+                value=Cp_LIQ,
+                unit="J/mol·K",
+                symbol="Cp_LIQ"
+            )
         except Exception as e:
             raise Exception("Calculating properties failed!, ", e)

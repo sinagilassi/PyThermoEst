@@ -2,7 +2,10 @@
 import logging
 from typing import List, Tuple
 # locals
-from ..models import ZabranskyRuzickaGroupContributions, ZabranskyRuzickaGroupContributionsCorrections
+from ..models import (
+    ZabranskyRuzickaGroupContributions,
+    ZabranskyRuzickaGroupContributionsCorrections,
+)
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
