@@ -1,4 +1,5 @@
 # import libs
+from typing import Callable
 from pydantic import BaseModel, Field
 
 # NOTE: Quantity
@@ -10,3 +11,9 @@ class GroupUnit(BaseModel):
         0,
         description="The numerical value of the quantity."
     )
+
+
+class Eq(BaseModel):
+    value: Callable[[float], float]
+    unit: str
+    symbol: str
