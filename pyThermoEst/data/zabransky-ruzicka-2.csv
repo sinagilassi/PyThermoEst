@@ -1,4 +1,4 @@
-﻿No.,Group,a[i],b[i],d[i],T[min],T[max]
+﻿No.,Group,a_i,b_i,d_i,Tmin,Tmax
 1,Cyclopropanea,4.26604,-3.84365,0.918892,154,315
 2,Cyclobutane,3.60313,-3.92527,0.896841,140,301
 3,Cyclopentane,0.256206,-1.25579,0.213503,140,460
