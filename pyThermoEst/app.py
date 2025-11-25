@@ -80,17 +80,16 @@ def zabransky_ruzicka_calc(
     -------
     dict
         A dictionary containing calculated thermodynamic properties as:
-        - value: equation to calculate heat capacity (Cp_LIQ).
-        - units: units of the heat capacity (J/mol).
+        - value: equation to calculate heat capacity.
+        - units: units of the heat capacity (J/mol.K).
         - symbol: symbol representing heat capacity (Cp_LIQ).
 
     Notes
     -----
     You can use either the field names or their aliases to specify group contributions. For example:
-    - methyl has alias '-CH3'
-    - methylene has alias '-CH2- @non-ring'
-    - imine_non_ring has alias '-N= @non-ring'
-    - imine_ring has alias '-N= @ring'
+    - C-(H)3(C)
+    - C-(H)2(C)2
+    - C-(H)(C)3
 
     """
     try:

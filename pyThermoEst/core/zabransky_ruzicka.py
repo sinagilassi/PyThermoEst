@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import Dict, Any, Literal
+from typing import Dict, Any, Literal, Optional
 from math import pow
 import os
 # locals
@@ -25,13 +25,17 @@ logger = logging.getLogger(__name__)
 class ZabranskyRuzicka:
     '''
     Zabransky-Ruzicka method to estimate thermodynamic properties.
+
+    A second-order group additivity approach for estimating the temperature-dependent heat capacity of pure organic liquids in the range from melting point to normal boiling point.
     '''
 
     def __init__(
         self,
         group_contributions: ZabranskyRuzickaGroupContributions | Dict[str, float],
-        group_corrections: ZabranskyRuzickaGroupContributionsCorrections | Dict[
-            str, float] | None
+        group_corrections:  Optional[
+            ZabranskyRuzickaGroupContributionsCorrections | Dict[
+            str, float]
+        ] = None
     ):
         '''
         Initializes the Zabransky-Ruzicka method.
