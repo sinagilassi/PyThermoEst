@@ -6,7 +6,7 @@ from .configs import (
     __license__,
 )
 
-from .app import joback_calc
+from .app import joback_calc, zabransky_ruzicka_calc
 
 __all__ = [
     # config
@@ -17,4 +17,5 @@ __all__ = [
     "__license__",
     # app
     "joback_calc",
+    "zabransky_ruzicka_calc",
 ]

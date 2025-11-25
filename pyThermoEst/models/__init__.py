@@ -1,5 +1,5 @@
 # ref
-from .ref import GroupUnit
+from .ref import GroupUnit, Eq
 # joback group contributions
 from .jb import (
     JobackGroupContributions,
