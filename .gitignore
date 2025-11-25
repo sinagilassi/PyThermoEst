@@ -1,6 +1,8 @@
 # ignore folder
 archive/
 
+.pypirc
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
