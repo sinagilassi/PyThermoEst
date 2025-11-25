@@ -70,7 +70,9 @@ exclude = [
     "app",
     "app.*",
     "docs",
-    "docs.*"
+    "docs.*",
+    "sources",
+    "sources.*",
 ]
 
 [tool.setuptools.package-data]
