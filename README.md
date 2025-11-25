@@ -1,5 +1,9 @@
 # 🧪 PyThermoEst
 
+![PyPI](https://img.shields.io/pypi/v/PyThermoEst)
+![Python Version](https://img.shields.io/pypi/pyversions/PyThermoEst.svg)
+![License](https://img.shields.io/pypi/l/PyThermoEst)
+
 PyThermoEst is a Python toolkit for estimating thermodynamic properties from group-contribution methods. It currently supports the **Joback** method for estimating a wide range of properties and the **Zabransky–Ruzicka** method for predicting the liquid-phase heat capacity.
 
 ## 📦 Installation
@@ -28,6 +32,15 @@ payload = {
 }
 
 joback_groups = JobackGroupContributions(**payload)
+
+# or dict with aliases:
+# joback_groups = {
+#     "-CH3": 2,
+#     "=CH- @ring": 3,
+#     "=C< @ring": 3,
+#     "-OH @phenol": 1,
+# }
+
 result = joback_calc(groups=joback_groups, total_atoms_number=18)
 
 # Evaluate a temperature-dependent property, e.g., heat capacity at 273 K
@@ -56,8 +69,17 @@ payload = {
 contributions = ZabranskyRuzickaGroupContributions(**payload)
 corrections = ZabranskyRuzickaGroupContributionsCorrections()
 
-result = zabransky_ruzicka_calc(group_contributions=contributions,
-                                group_corrections=corrections)
+# or dicts with aliases:
+# contributions = {
+#     "C-(H)3(O)": 2,
+#     "CO-(O)2": 1,
+#     "O-(C)(CO)": 2,
+# }
+
+result = zabransky_ruzicka_calc(
+    group_contributions=contributions,
+    group_corrections=corrections
+)
 cp_liq_at_300k = result["value"](298.15)
 print(cp_liq_at_300k, result["unit"], result["symbol"])
 ```
@@ -130,3 +152,11 @@ corr_names, corr_ids = zabransky_ruzicka_group_correction_info()
 - `pyThermoEst.app.zabransky_ruzicka_calc(group_contributions, group_corrections=None)`: Returns an equation for liquid heat capacity plus units and symbol metadata.
 
 Each function accepts either the pydantic models or plain dictionaries keyed by group identifiers; aliases are supported for convenience.
+
+## 📝 License
+
+This project is licensed under the MIT License. You are free to use, modify, and distribute this software in your own applications or projects. However, if you choose to use this app in another app or software, please ensure that my name, Sina Gilassi, remains credited as the original author. This includes retaining any references to the original repository or documentation where applicable. By doing so, you help acknowledge the effort and time invested in creating this project.
+
+## ❓ FAQ
+
+For any question, contact me on [LinkedIn](https://www.linkedin.com/in/sina-gilassi/)
