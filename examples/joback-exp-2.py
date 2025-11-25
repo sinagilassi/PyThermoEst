@@ -34,13 +34,22 @@ groups = JobackGroupContributions(**payload)
 # log
 print(groups)
 
+# NOTE: use dictionary format
+groups = {
+    "-CH3": 2,
+    "=CH- @ring": 3,
+    "=C< @ring": 3,
+    "-OH @phenol": 1,
+}
+
 # SECTION: Calculate Joback properties
 result = joback_calc(
     groups=groups,
     total_atoms_number=18,
-    )
+)
 print(result)
 
 if result:
-    res_ =result['heat_capacity']['value'](273)
+    res_ = result['heat_capacity']['value'](273) if callable(
+        result['heat_capacity']['value']) else result['heat_capacity']['value']
     print(f"Heat capacity at 273 K: {res_} J/(mol·K)")
