@@ -1,5 +1,6 @@
 # 🧪 PyThermoEst
 
+[![PyPI Downloads](https://static.pepy.tech/badge/pythermoest/month)](https://pepy.tech/projects/pythermoest)
 ![PyPI](https://img.shields.io/pypi/v/PyThermoEst)
 ![Python Version](https://img.shields.io/pypi/pyversions/PyThermoEst.svg)
 ![License](https://img.shields.io/pypi/l/PyThermoEst)
