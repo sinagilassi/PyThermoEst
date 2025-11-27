@@ -77,13 +77,13 @@ def joback_group_contribution_ids() -> List[str]:
         return []
 
 
-def joback_group_contribution_category() -> Dict[str, Dict[str, str]]:
+def joback_group_contribution_category() -> Dict[str, List[Dict[str, str]]]:
     """
     Get the Joback group contribution categorized by their categories.
 
     Returns
     -------
-    Dict[str, Dict[str, str]]
+    Dict[str, List[Dict[str, str]]]
         A dictionary categorizing group contributions by their categories.
     """
     try:
