@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 # locals
 from ..models import JobackGroupContributions
 
@@ -8,8 +8,7 @@ from ..models import JobackGroupContributions
 logger = logging.getLogger(__name__)
 
 
-
-def joback_group_contribution_info() -> Tuple[List[str],List[str]]:
+def joback_group_contribution_info() -> Tuple[List[str], List[str]]:
     """
     Get the list of Joback group contribution.
 
@@ -40,6 +39,7 @@ def joback_group_contribution_info() -> Tuple[List[str],List[str]]:
         logger.error(f"Error retrieving Joback group contribution IDs: {e}")
         return [], []
 
+
 def joback_group_contribution_names() -> List[str]:
     """
     Get the list of Joback group contribution names.
@@ -56,6 +56,7 @@ def joback_group_contribution_names() -> List[str]:
     except Exception as e:
         logger.error(f"Error retrieving Joback group contribution IDs: {e}")
         return []
+
 
 def joback_group_contribution_ids() -> List[str]:
     """
@@ -74,3 +75,51 @@ def joback_group_contribution_ids() -> List[str]:
     except Exception as e:
         logger.error(f"Error retrieving Joback group contribution IDs: {e}")
         return []
+
+
+def joback_group_contribution_category() -> Dict[str, Dict[str, str]]:
+    """
+    Get the Joback group contribution categorized by their categories.
+
+    Returns
+    -------
+    Dict[str, Dict[str, str]]
+        A dictionary categorizing group contributions by their categories.
+    """
+    try:
+        # NOTE: category
+        category = {}
+
+        # NOTE: alias
+        for filed_name, field_info in JobackGroupContributions.model_fields.items():
+            # ! alias
+            alias = field_info.alias
+            # ! category
+            cat = field_info.json_schema_extra or None
+
+            # check
+            if cat and isinstance(cat, dict):
+                cat_value = cat.get("category", "Unknown")
+            else:
+                cat_value = "Unknown"
+
+            # >> create category
+            if cat_value not in category:
+                category[cat_value] = []
+
+            # >> store alias
+            if alias is None:
+                alias = "N/A"
+
+            # store in category
+            res_ = {
+                "group": filed_name,
+                "alias": alias
+            }
+            # >> append
+            category[cat_value].append(res_)
+
+        return category
+    except Exception as e:
+        logger.error(f"Error retrieving Joback group contribution IDs: {e}")
+        return {}
