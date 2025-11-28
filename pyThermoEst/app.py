@@ -6,7 +6,9 @@ from .models import (
     JobackGroupContributions,
     ZabranskyRuzickaGroupContributions,
     ZabranskyRuzickaGroupContributionsCorrections,
-    EstimatedProp
+    EstimatedProp,
+    JobackProp,
+    JobackCalcProp
 )
 from .core import Joback, ZabranskyRuzicka
 
@@ -43,7 +45,6 @@ def joback_calc(
     - methylene has alias '-CH2- @non-ring'
     - imine_non_ring has alias '-N= @non-ring'
     - imine_ring has alias '-N= @ring'
-
     """
     try:
         # SECTION: initialize Joback method
@@ -57,6 +58,115 @@ def joback_calc(
     except Exception as e:
         logger.error(f"Error in Joback calculation: {e}")
         return None
+
+
+def joback_prop_calc(
+    groups: JobackGroupContributions | Dict[str, int] | Dict[str, float],
+    total_atoms_number: int,
+) -> Optional[Dict[str, JobackProp]]:
+    """
+    Using Joback method to calculate a only thermodynamic property.
+
+    Parameters
+    ----------
+    groups : JobackGroupContributions | Dict[str, float] | Dict[str, int]
+        Group contributions for Joback method.
+    total_atoms_number : int
+        Total number of atoms in the molecule.
+
+    Returns
+    -------
+    Dict[str, JobackProp] | None
+        A dictionary containing the calculated thermodynamic property.
+
+    Notes
+    -----
+    You can use either the field names or their aliases to specify group contributions.
+    """
+    try:
+        # SECTION: initialize Joback method
+        joback_calc_ = joback_calc(
+            groups=groups,
+            total_atoms_number=total_atoms_number
+        )
+
+        # SECTION: return property (not callable ones in value)
+        # NOTE: initialize result
+        prop_result: Dict[str, JobackProp] = {}
+
+        # NOTE: iterate over calculated properties
+        if joback_calc_:
+            for prop_name, prop_data in joback_calc_.items():
+                value = prop_data['value']
+                if callable(value):
+                    continue
+
+                # >> add to result
+                prop_result[prop_name] = JobackProp(
+                    value=value,
+                    unit=prop_data['unit'],
+                    symbol=prop_data['symbol']
+                )
+
+        return prop_result
+    except Exception as e:
+        logger.error(f"Error in Joback property calculation: {e}")
+        return None
+
+
+def joback_heat_capacity_calc(
+    groups: JobackGroupContributions | Dict[str, int] | Dict[str, float],
+    total_atoms_number: int,
+) -> Optional[JobackCalcProp]:
+    """
+    Using Joback method to retrieve heat capacity equation (function of temperature [K]).
+
+    Parameters
+    ----------
+    groups : JobackGroupContributions | Dict[str, float] | Dict[str, int]
+        Group contributions for Joback method.
+    total_atoms_number : int
+        Total number of atoms in the molecule.
+
+    Returns
+    -------
+    JobackCalcProp | None
+        A dictionary containing calculated heat capacity property as:
+        - value: equation to calculate heat capacity.
+        - units: units of the heat capacity (J/mol.K).
+        - symbol: symbol representing heat capacity (Cp_LIQ).
+
+    Notes
+    -----
+    You can use either the field names or their aliases to specify group contributions.
+    """
+    try:
+        # SECTION: initialize Joback method
+        joback_calc_ = joback_calc(
+            groups=groups,
+            total_atoms_number=total_atoms_number
+        )
+
+        # SECTION: return heat capacity property
+        if joback_calc_ and 'heat_capacity' in joback_calc_:
+            heat_capacity_data = joback_calc_['heat_capacity']
+
+            # check type
+            if not callable(heat_capacity_data['value']):
+                return None
+
+            # >> return heat capacity
+            return JobackCalcProp(
+                value=heat_capacity_data['value'],
+                unit=heat_capacity_data['unit'],
+                symbol=heat_capacity_data['symbol']
+            )
+
+        return None
+    except Exception as e:
+        logger.error(f"Error in Joback heat capacity calculation: {e}")
+        return None
+
 
 # SECTION: Zabransky-Ruzicka Group Contributions
 
