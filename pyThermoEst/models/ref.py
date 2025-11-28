@@ -19,10 +19,6 @@ class Eq(BaseModel):
     symbol: str
 
 
-# SECTION: Joback Group Contributions
-
-
-# SECTION: Zabransky-Ruzicka Group Contributions
 class EstimatedProp(TypedDict):
     value: Callable[[float], float] | float | None
     unit: str

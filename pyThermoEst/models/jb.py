@@ -1,6 +1,7 @@
 # import libs
-from typing import Optional, Dict
+from typing import Optional, Dict, TypedDict, Callable
 from pydantic import BaseModel, Field, ConfigDict
+
 # local
 from .ref import GroupUnit
 
@@ -377,3 +378,15 @@ class JobackHeatCapacity(BaseModel):
         Alias method if you prefer Cp(T) instead of obj(T).
         """
         return self(T)
+
+
+class JobackProp(TypedDict):
+    value: float | None
+    unit: str
+    symbol: str
+
+
+class JobackCalcProp(TypedDict):
+    value: Callable[[float], float] | None
+    unit: str
+    symbol: str
