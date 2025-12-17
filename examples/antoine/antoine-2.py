@@ -1,11 +1,14 @@
 # import libs
 import os
+import numpy as np
 from rich import print
 from pythermodb_settings.models import Temperature, Pressure
 from pyThermoEst.docs.antoine import (
     estimate_coefficients,
     AntoineFitResult,
 )
+# local
+from antoine_utils import plot_antoine_fit
 
 # NOTE: experimental data file path
 # ! Temperature unit: K
@@ -55,3 +58,16 @@ if result is None:
 else:
     print("[bold green]Estimated Antoine coefficients:[/bold green]")
     print(result)
+
+
+# NOTE: plot Antoine fit
+if result is not None:
+    plot_antoine_fit(
+        T_data=np.array(temperatures),
+        P_data=np.array(Pressures),
+        fit_report=result.model_dump(),
+        T_unit="K",
+        p_unit="Pa",
+        n_curve=200,
+        show_residuals=True,
+    )
