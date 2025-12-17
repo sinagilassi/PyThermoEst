@@ -1,5 +1,5 @@
 # import libs
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, List, Any
 import numpy as np
 
@@ -35,6 +35,8 @@ class AntoineFitResult(BaseModel):
             return v.tolist()
         return v
 
-    class Config:
-        arbitrary_types_allowed = True
-        orm_mode = True
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra="allow",
+        from_attributes=True,
+    )
