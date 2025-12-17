@@ -1,12 +1,13 @@
 # import libs
 from __future__ import annotations
 import logging
-from typing import Optional, Dict, List
+import pandas as pd
 import numpy as np
 import math
 from typing import Optional, Tuple, Dict, Any, List
 from scipy.optimize import least_squares
-import numpy as np
+from pathlib import Path
+import pycuc
 # local
 
 # NOTE: set up logger
@@ -32,8 +33,8 @@ class Antoine:
         T_data: np.ndarray,
         P_data: np.ndarray,
         *,
-        T_unit: str = "K",
         base: str = "log10",
+        T_unit: str = "K",
         p_unit: str = "Pa",
         fit_in_log_space: bool = True,
         weights: Optional[np.ndarray] = None,
@@ -65,10 +66,10 @@ class Antoine:
             Array of temperature data points.
         P_data : np.ndarray
             Array of vapor pressure data points.
-        T_unit : str, optional
-            Unit of temperature data: 'K' or 'C' (default 'K').
         base : str, optional
             Logarithm base for Antoine equation: 'log10' or 'ln' (default 'log10').
+        T_unit : str, optional
+            Unit of temperature data: 'K' or 'C' (default 'K').
         p_unit : str, optional
             Unit of pressure data: 'Pa' or 'bar' (default 'Pa').
         fit_in_log_space : bool, optional
@@ -180,14 +181,24 @@ class Antoine:
         if x0 is None:
             C0 = -50.0
             if np.min(T_k + C0) <= min_margin_kelvin:
+                # ! C0 too low, adjust
                 C0 = -np.min(T_k) + 10.0
+
+            # ! A0: mean logP
             A0 = float(np.mean(y))
+
+            # ! B0: from rough slope
             m, _b = np.polyfit(1.0 / T_k, y, 1)
-            B0 = float(
-                abs(m) * (np.mean(T_k + C0) ** 2)
-            ) if np.isfinite(m) else 2000.0
-            if B0 <= 1e-6:
+
+            Tmean = float(np.mean(T_k))
+            ratio = (float(np.mean(T_k + C0)) / Tmean) ** 2
+            B0 = float(abs(m) * ratio)
+
+            # >> sanity check B0
+            if not np.isfinite(B0) or B0 <= 1e-6:
                 B0 = 2000.0
+
+            # ! > assemble x0
             x0 = (A0, B0, C0)
 
         # >> Convert x0 to array
@@ -438,3 +449,83 @@ class Antoine:
                 }
             )
         return out
+
+    @staticmethod
+    def load_experimental_data(
+        experimental_data: str | Path,
+        T_unit: str,
+        P_unit: str,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Load experimental data from CSV file, then convert to arrays. The CSV file must contain 'Temperature' and 'Pressure' columns. Temperature and pressure units are specified via T_unit and P_unit, the defaults being 'K' and 'Pa' respectively.
+
+        Parameters
+        ----------
+        experimental_data : str | Path
+            Path to CSV file with 'Temperature' and 'Pressure' columns.
+        T_unit : str
+            Unit of temperature data: 'K' or 'C'.
+        P_unit : str
+            Unit of pressure data: 'Pa' or 'bar'.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray]
+            Arrays of temperatures and pressures.
+        """
+        try:
+            # SECTION: Load data
+            df = pd.read_csv(experimental_data)
+
+            # NOTE: Validate columns
+            df_columns_lower = [col.strip().lower() for col in df.columns]
+
+            # >> check columns
+            if 'temperature' not in df_columns_lower or 'pressure' not in df_columns_lower:
+                logger.error(
+                    "CSV file must contain 'Temperature' and 'Pressure' columns.")
+                return np.array([]), np.array([])
+            # >> get actual column names
+            temp_col = df.columns[df_columns_lower.index('temperature')]
+            pres_col = df.columns[df_columns_lower.index('pressure')]
+
+            # >> check data types
+            if df[temp_col].dtype not in [np.float64, np.float32, np.int64, np.int32]:
+                logger.error(
+                    "'Temperature' column must contain numeric data.")
+                return np.array([]), np.array([])
+
+            if df[pres_col].dtype not in [np.float64, np.float32, np.int64, np.int32]:
+                logger.error(
+                    "'Pressure' column must contain numeric data.")
+                return np.array([]), np.array([])
+
+            # NOTE: >> to arrays
+            temperatures = df[temp_col]
+            # >> Unit conversions
+            temperatures = [
+                pycuc.convert_from_to(
+                    float(T_val),
+                    from_unit=T_unit,
+                    to_unit='K'
+                ) for T_val in temperatures
+            ]
+
+            pressures = df[pres_col]
+            pressures = [
+                pycuc.convert_from_to(
+                    float(P_val),
+                    from_unit=P_unit,
+                    to_unit='Pa'
+                ) for P_val in pressures
+            ]
+
+            # SECTION: to arrays
+            pressures = np.array(pressures, dtype=float)
+            temperatures = np.array(temperatures, dtype=float)
+
+            return temperatures, pressures
+        except Exception as e:
+            logger.exception(
+                f"Failed to load experimental data: {e}")
+            return np.array([]), np.array([])
