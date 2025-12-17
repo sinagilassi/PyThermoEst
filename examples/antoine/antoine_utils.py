@@ -5,66 +5,76 @@ import matplotlib.pyplot as plt
 
 
 def plot_antoine_fit(
-    T_data: np.ndarray,
-    P_data: np.ndarray,
-    fit_report: Dict[str, Any],
+    T_data,
+    P_data,
+    fit_report,
     *,
-    T_unit: str = "K",
-    p_unit: str = "Pa",
-    n_curve: int = 200,
-    show_residuals: bool = True,
-) -> None:
-    """
-    Plot experimental vs Antoine fit (Psat vs T) and optional residual plot in log(P).
-    Pressure axis is log-scale (recommended for vapor pressure).
-    """
+    T_unit="K",
+    p_data_unit="Pa",     # unit of your experimental P_data
+    p_display_unit="Pa",  # how you want to show the y-axis
+    n_curve=200,
+    show_residuals=True,
+):
+    import numpy as np
+    import matplotlib.pyplot as plt
+
     T = np.asarray(T_data, dtype=float).ravel()
     P = np.asarray(P_data, dtype=float).ravel()
 
-    # x-axis
+    # Temperature handling
     if T_unit.lower() in ("c", "degc", "celsius", "°c"):
         T_k = T + 273.15
-        T_plot = T
+        x = T
         xlabel = "T (°C)"
-        Tgrid_plot = np.linspace(np.min(T), np.max(T), n_curve)
-        Tgrid_k = Tgrid_plot + 273.15
+        Tgrid_k = np.linspace(np.min(T_k), np.max(T_k), n_curve)
+        Tgrid = Tgrid_k - 273.15
     else:
         T_k = T
-        T_plot = T
+        x = T
         xlabel = "T (K)"
         Tgrid_k = np.linspace(np.min(T_k), np.max(T_k), n_curve)
-        Tgrid_plot = Tgrid_k
+        Tgrid = Tgrid_k
 
-    # y-axis
-    if p_unit.lower() == "bar":
-        P_pa = P * 1e5
-        P_plot = P
-        ylabel = "Psat (bar)"
-    else:
+    # Convert experimental P_data -> Pa (internal)
+    p_data_unit = p_data_unit.lower()
+    if p_data_unit == "pa":
         P_pa = P
-        P_plot = P
-        ylabel = "Psat (Pa)"
+    elif p_data_unit == "bar":
+        P_pa = P * 1e5
+    else:
+        raise ValueError("p_data_unit must be 'Pa' or 'bar'.")
 
-    A, B, C = float(fit_report["A"]), float(
-        fit_report["B"]), float(fit_report["C"])
+    # Evaluate fit (always yields Pa internally)
+    A, B, C = fit_report["A"], fit_report["B"], fit_report["C"]
     base = str(fit_report.get("base", "log10")).lower()
 
     y_hat_grid = A - B / (Tgrid_k + C)
     if base == "log10":
-        P_hat_grid_pa = 10.0 ** y_hat_grid
+        P_fit_pa = 10.0 ** y_hat_grid
         y = np.log10(P_pa)
+        y_hat = A - B / (T_k + C)
     else:
-        P_hat_grid_pa = np.exp(y_hat_grid)
+        P_fit_pa = np.exp(y_hat_grid)
         y = np.log(P_pa)
+        y_hat = A - B / (T_k + C)
 
-    if p_unit.lower() == "bar":
-        P_hat_grid = P_hat_grid_pa / 1e5
+    # Convert both experimental and fit to display unit
+    p_display_unit = p_display_unit.lower()
+    if p_display_unit == "pa":
+        P_plot = P_pa
+        P_fit_plot = P_fit_pa
+        ylabel = "Psat (Pa)"
+    elif p_display_unit == "bar":
+        P_plot = P_pa / 1e5
+        P_fit_plot = P_fit_pa / 1e5
+        ylabel = "Psat (bar)"
     else:
-        P_hat_grid = P_hat_grid_pa
+        raise ValueError("p_display_unit must be 'Pa' or 'bar'.")
 
+    # Plot
     plt.figure()
-    plt.scatter(T_plot, P_plot, label="Experimental")
-    plt.plot(Tgrid_plot, P_hat_grid, label="Antoine fit")
+    plt.scatter(x, P_plot, label="Experimental")
+    plt.plot(Tgrid, P_fit_plot, label="Antoine fit")
     plt.yscale("log")
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -72,16 +82,12 @@ def plot_antoine_fit(
     plt.legend()
     plt.show()
 
-    if not show_residuals:
-        return
-
-    y_hat = A - B / (T_k + C)
-    r = y_hat - y
-
-    plt.figure()
-    plt.scatter(T_plot, r)
-    plt.axhline(0.0)
-    plt.xlabel(xlabel)
-    plt.ylabel("Residual in log(P)")
-    plt.title("Antoine Fit Residuals (log-space)")
-    plt.show()
+    if show_residuals:
+        r = y_hat - y
+        plt.figure()
+        plt.scatter(x, r)
+        plt.axhline(0.0)
+        plt.xlabel(xlabel)
+        plt.ylabel("Residual in log(P)")
+        plt.title("Antoine Fit Residuals (log-space)")
+        plt.show()
