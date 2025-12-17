@@ -127,6 +127,12 @@ class Antoine:
             P_pa = P
         elif p_unit == "bar":
             P_pa = P * 1e5
+        elif p_unit == "kpa":
+            P_pa = P * 1e3
+        elif p_unit == "atm":
+            P_pa = P * 101325.0
+        elif p_unit == "psi":
+            P_pa = P * 6894.76
         else:
             logger.error("p_unit must be 'Pa' or 'bar'.")
             return {}
@@ -285,9 +291,11 @@ class Antoine:
 
         # SECTION: Return fit report
         return {
-            "A": A, "B": B, "C": C,
+            "A": A,
+            "B": B,
+            "C": C,
             "base": base,
-            "p_unit": "pa",
+            "p_unit": "Pa",
             "T_unit_internal": "K",
             "fit_in_log_space": bool(fit_in_log_space),
             "success": bool(res.success),
@@ -396,6 +404,14 @@ class Antoine:
 
         if p_unit.lower() == "bar":
             P_pa = P * 1e5
+        elif p_unit.lower() == "pa":
+            P_pa = P
+        elif p_unit.lower() == "kpa":
+            P_pa = P * 1e3
+        elif p_unit.lower() == "atm":
+            P_pa = P * 101325.0
+        elif p_unit.lower() == "psi":
+            P_pa = P * 6894.76
         else:
             P_pa = P
 
@@ -529,3 +545,64 @@ class Antoine:
             logger.exception(
                 f"Failed to load experimental data: {e}")
             return np.array([]), np.array([])
+
+    @staticmethod
+    def calc(
+        T_value: float,
+        T_unit: str,
+        A: float,
+        B: float,
+        C: float,
+        base: str = "log10",
+    ) -> Optional[Dict[str, float]]:
+        """
+        Calculate vapor pressure at given temperature using Antoine equation.
+
+        Parameters
+        ----------
+        T_value : float
+            Temperature value.
+        T_unit : str
+            Unit of temperature: 'K' or 'C'.
+        A : float
+            Antoine coefficient A.
+        B : float
+            Antoine coefficient B.
+        C : float
+            Antoine coefficient C.
+        base : str, optional
+            Logarithm base: 'log10' or 'ln' (default 'log10').
+
+        Returns
+        -------
+        Optional[Dict[str, float]]
+            Dict with 'temperature' in Kelvin and 'vapor_pressure' in Pa entries, or None on failure.
+        """
+        try:
+            # >> Convert T to K
+            if T_unit.lower() in ("k", "kelvin"):
+                T_k = T_value
+            elif T_unit.lower() in ("c", "degc", "celsius", "°c"):
+                T_k = T_value + 273.15
+            else:
+                logger.error("T_unit must be 'K' or 'C'.")
+                return None
+
+            # >> Calculate logP
+            if base.lower() == "log10":
+                logP = A - B / (T_k + C)
+                P_pa = 10.0 ** logP
+            elif base.lower() == "ln":
+                logP = A - B / (T_k + C)
+                P_pa = np.exp(logP)
+            else:
+                logger.error("base must be 'log10' or 'ln'.")
+                return None
+
+            return {
+                "temperature": T_k,
+                "vapor_pressure": P_pa
+            }
+        except Exception as e:
+            logger.exception(f"Failed to calculate vapor pressure: {e}")
+            return None
