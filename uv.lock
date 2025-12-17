@@ -321,7 +321,7 @@ dependencies = [
 requires-dist = [
     { name = "numpy", specifier = ">=2.3.5" },
     { name = "pandas", specifier = ">=2.3.3" },
-    { name = "pycuc", specifier = ">=2.2.0" },
+    { name = "pycuc" },
     { name = "pydantic", specifier = ">=2.12.4" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "pythermodb-settings" },
