@@ -4,6 +4,7 @@ from typing import List, Tuple, Optional, Literal
 import numpy as np
 from pythermodb_settings.models import Temperature, Pressure
 from pathlib import Path
+import pycuc
 # local
 from ..core import Antoine
 from ..util import normalize_unit
@@ -142,7 +143,7 @@ def estimate_coefficients(
 
         norm_pressures = normalize_unit(
             data=pressures,
-            to_unit="bar",
+            to_unit="Pa",
             valid_from=["Pa", "kPa", "bar", "atm", "psi"]
         )
 
@@ -337,4 +338,91 @@ def estimate_coefficients_from_experimental_data(
     except Exception as e:
         logger.exception(
             f"An error occurred during coefficient estimation from experimental data: {e}")
+        return None
+
+
+def calc_vapor_pressure(
+    temperature: Temperature,
+    A: float,
+    B: float,
+    C: float,
+    *,
+    base: Literal['log10', 'ln'] = 'log10',
+    pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'] = 'Pa',
+) -> Optional[Pressure]:
+    """
+    Calculate vapor pressure using the Antoine equation given temperature and Antoine coefficients. The Antoine equation is defined as:
+
+        log10(P) = A - B / (T + C)   (if base is "log10")
+        ln(P)   = A - B / (T + C)    (if base is "ln")
+
+    Finally, the vapor pressure is returned in the specified pressure unit as:
+
+        P = 10^(A - B / (T + C))   (if base is "log10")
+        P = exp(A - B / (T + C))    (if base is "ln")
+
+    Parameters
+    ----------
+    temperature : Temperature
+        Temperature model containing value and unit.
+    A : float
+        Antoine coefficient A.
+    B : float
+        Antoine coefficient B.
+    C : float
+        Antoine coefficient C.
+    base : str, optional
+        Logarithm base used in the Antoine equation ('log10' or 'ln'), by default 'log10'.
+    pressure_unit : str, optional
+        Desired unit for the output pressure ('Pa', 'kPa', 'bar', 'atm', 'psi'), by default 'Pa'.
+
+    Returns
+    -------
+    Optional[Pressure]
+        Calculated saturation pressure as a Pressure model in Pa, or None if calculation fails.
+    """
+    try:
+        # SECTION: Normalize temperature to Kelvin
+        norm_temperature = normalize_unit(
+            data=[temperature],
+            to_unit="K",
+            valid_from=["C", "F", "K", "R"]
+        )
+
+        if not norm_temperature:
+            logger.error("Normalization of temperature unit failed.")
+            return Pressure(value=np.nan, unit="Pa")
+
+        T_k = norm_temperature.get('data', [])[0]
+
+        # SECTION: Calculate saturation pressure
+        res_calc = Antoine.calc(
+            T_value=T_k,
+            T_unit="K",
+            A=A,
+            B=B,
+            C=C,
+            base=base,
+        )
+
+        # >> check result
+        if res_calc is None:
+            logger.error("Antoine calculation returned None.")
+            return None
+
+        res = Pressure(value=res_calc['vapor_pressure'], unit="Pa")
+
+        # NOTE: convert to desired pressure unit
+        if pressure_unit != "Pa":
+            res_ = pycuc.convert_from_to(
+                value=res.value,
+                from_unit="Pa",
+                to_unit=pressure_unit,
+            )
+            # res
+            return Pressure(value=res_, unit=pressure_unit)
+
+        return res
+    except Exception as e:
+        logger.exception(f"An error occurred during pressure calculation: {e}")
         return None
