@@ -13,6 +13,8 @@ print(f"[bold green]DATA_FILE_PATH:[/bold green] {DATA_FILE_PATH}")
 # NOTE: estimate Antoine coefficients from experimental data
 result: AntoineFitResult | None = estimate_coefficients_from_experimental_data(
     experimental_data=DATA_FILE_PATH,
+    temperature_unit="K",  # ! specify temperature unit in experimental data
+    pressure_unit="Pa",  # ! specify pressure unit in experimental data
 )
 if result is None:
     print("[bold red]Failed to estimate Antoine coefficients from experimental data.[/bold red]")
