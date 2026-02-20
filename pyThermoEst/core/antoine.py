@@ -518,23 +518,7 @@ class Antoine:
 
             # NOTE: >> to arrays
             temperatures = df[temp_col]
-            # >> Unit conversions
-            temperatures = [
-                pycuc.convert_from_to(
-                    float(T_val),
-                    from_unit=T_unit,
-                    to_unit='K'
-                ) for T_val in temperatures
-            ]
-
             pressures = df[pres_col]
-            pressures = [
-                pycuc.convert_from_to(
-                    float(P_val),
-                    from_unit=P_unit,
-                    to_unit='Pa'
-                ) for P_val in pressures
-            ]
 
             # SECTION: to arrays
             pressures = np.array(pressures, dtype=float)
