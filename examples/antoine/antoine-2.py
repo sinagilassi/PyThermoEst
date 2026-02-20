@@ -14,6 +14,7 @@ from antoine_utils import plot_antoine_fit
 
 # NOTE: experimental data file path
 # ! Temperature unit: K
+temperature_unit = "K"
 temperatures = [
     298,
     308,
@@ -29,6 +30,7 @@ temperatures = [
     408,
 ]
 # ! Pressure unit: Pa
+pressure_unit = "Pa"
 pressures = [
     3392.900018,
     5738.327528,
@@ -45,15 +47,17 @@ pressures = [
 ]
 
 # >> temperature
-Ts = [Temperature(value=T, unit="K") for T in temperatures]
+Ts = [Temperature(value=T, unit=temperature_unit) for T in temperatures]
 # >> pressure
-Ps = [Pressure(value=P, unit="Pa") for P in pressures]
+Ps = [Pressure(value=P, unit=pressure_unit) for P in pressures]
 
 
 # NOTE: estimate Antoine coefficients
 result: AntoineFitResult | None = estimate_coefficients(
     temperatures=Ts,
     pressures=Ps,
+    regression_pressure_unit=pressure_unit,
+    regression_temperature_unit=temperature_unit,
 )
 if result is None:
     print("[bold red]Failed to estimate Antoine coefficients.[/bold red]")
@@ -89,6 +93,8 @@ if result is not None:
             B=B,
             C=C,
             base=base,
+            regression_pressure_unit=pressure_unit,
+            regression_temperature_unit=temperature_unit,
         )
 
         if res_ is not None:
