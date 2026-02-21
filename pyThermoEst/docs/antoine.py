@@ -17,19 +17,6 @@ logger = logging.getLogger(__name__)
 def estimate_coefficients(
     temperatures: List[Temperature],
     pressures: List[Pressure],
-    regression_temperature_unit: Literal[
-        'K',
-        'C',
-        'F',
-        'R'
-    ] = 'K',
-    regression_pressure_unit: Literal[
-        'Pa',
-        'kPa',
-        'bar',
-        'atm',
-        'psi'
-    ] = 'Pa',
     *,
     base: Literal['log10', 'ln'] = "log10",
     fit_in_log_space: bool = True,
@@ -60,10 +47,6 @@ def estimate_coefficients(
         List of Temperature models containing temperature values and units.
     pressures : List[Pressure]
         List of Pressure models containing pressure values and units.
-    regression_temperature_unit : Literal['K', 'C', 'F', 'R'], optional
-        Unit to which all temperatures will be normalized for regression, by default 'K'.
-    regression_pressure_unit : Literal['Pa', 'kPa', 'bar', 'atm', 'psi'], optional
-        Unit to which all pressures will be normalized for regression, by default 'Pa'.
     base : str, optional
         Logarithm base used in the Antoine equation ('log10' or 'ln'), by default "log10".
     fit_in_log_space : bool, optional
@@ -154,13 +137,13 @@ def estimate_coefficients(
         # NOTE: normalize temperatures to Kelvin
         norm_temperature = normalize_unit(
             data=temperatures,
-            to_unit=regression_temperature_unit,
+            to_unit="K",
             valid_from=["C", "F", "K", "R"]
         )
 
         norm_pressures = normalize_unit(
             data=pressures,
-            to_unit=regression_pressure_unit,
+            to_unit="Pa",
             valid_from=["Pa", "kPa", "bar", "atm", "psi"]
         )
 
@@ -187,8 +170,8 @@ def estimate_coefficients(
             T_data=temp_values,
             P_data=pres_values,
             base=base,
-            T_unit=regression_temperature_unit,
-            p_unit=regression_pressure_unit,
+            T_unit="K",
+            p_unit="Pa",
             fit_in_log_space=fit_in_log_space,
             weights=weights,
             x0=x0,
@@ -210,9 +193,9 @@ def estimate_coefficients(
 
 def estimate_coefficients_from_experimental_data(
     experimental_data: str | Path,
-    temperature_unit: Literal['K', 'C', 'F', 'R'],
-    pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'],
     *,
+    temperature_unit: Literal['K', 'C', 'F', 'R'] = 'K',
+    pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'] = 'Pa',
     base: str = "log10",
     fit_in_log_space: bool = True,
     weights: Optional[np.ndarray] = None,
@@ -240,10 +223,6 @@ def estimate_coefficients_from_experimental_data(
     ----------
     experimental_data : str | Path
         Path to experimental data file (CSV, JSON, etc.) containing temperature and pressure data.
-    temperature_unit : str, optional
-        Unit of temperature in the experimental data ('K', 'C', 'F', 'R'), by default 'K'.
-    pressure_unit : str, optional
-        Unit of pressure in the experimental data ('Pa', 'kPa', 'bar', 'atm', 'psi'), by default 'Pa'.
     base : str, optional
         Logarithm base used in the Antoine equation ('log10' or 'ln'), by default "log10".
     fit_in_log_space : bool, optional
@@ -324,7 +303,7 @@ def estimate_coefficients_from_experimental_data(
 
         # SECTION: Load experimental data by Antoine class method
         # >> load data
-        # ! temperature and pressure units are specified for correct parsing and normalization
+        # ! temperature in K, pressure in bar
         T_data, P_data = Antoine.load_experimental_data(
             experimental_data=data_path,
             T_unit=temperature_unit,
@@ -341,8 +320,8 @@ def estimate_coefficients_from_experimental_data(
             T_data=T_data,
             P_data=P_data,
             base=base,
-            T_unit=temperature_unit,  # ! regression temperature unit
-            p_unit=pressure_unit,  # ! regression pressure unit
+            T_unit="K",
+            p_unit="Pa",
             fit_in_log_space=fit_in_log_space,
             weights=weights,
             x0=x0,
@@ -369,17 +348,7 @@ def calc_vapor_pressure(
     C: float,
     *,
     base: Literal['log10', 'ln'] = 'log10',
-    regression_pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'] = 'Pa',
-    regression_temperature_unit: Literal['K', 'C', 'F', 'R'] = 'K',
-    output_pressure_unit: Optional[
-        Literal[
-            'Pa',
-            'kPa',
-            'bar',
-            'atm',
-            'psi'
-        ]
-    ] = None,
+    pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'] = 'Pa',
 ) -> Optional[Pressure]:
     """
     Calculate vapor pressure using the Antoine equation given temperature and Antoine coefficients. The Antoine equation is defined as:
@@ -404,40 +373,32 @@ def calc_vapor_pressure(
         Antoine coefficient C.
     base : str, optional
         Logarithm base used in the Antoine equation ('log10' or 'ln'), by default 'log10'.
-    regression_pressure_unit : str, optional
+    pressure_unit : str, optional
         Desired unit for the output pressure ('Pa', 'kPa', 'bar', 'atm', 'psi'), by default 'Pa'.
-    regression_temperature_unit : str, optional
-        Unit of the input temperature ('K', 'C', 'F', 'R'), by default 'K'.
 
     Returns
     -------
     Optional[Pressure]
         Calculated saturation pressure as a Pressure model in Pa, or None if calculation fails.
-
-    Notes
-    -----
-    - Antoine coefficients (A, B, C) should be consistent with the temperature and pressure units used in regression calculation.
-    - The function will handle unit normalization for temperature and pressure, but the Antoine coefficients must be compatible with the units of temperature used in the calculation.
     """
     try:
-        # SECTION: Normalize temperature to the temperature unit used in Antoine coefficients
+        # SECTION: Normalize temperature to Kelvin
         norm_temperature = normalize_unit(
             data=[temperature],
-            to_unit=regression_temperature_unit,
+            to_unit="K",
             valid_from=["C", "F", "K", "R"]
         )
 
-        # NOTE: check normalization result
         if not norm_temperature:
             logger.error("Normalization of temperature unit failed.")
-            return Pressure(value=np.nan, unit=regression_pressure_unit)
+            return Pressure(value=np.nan, unit="Pa")
 
-        T_norm = norm_temperature.get('data', [])[0]
+        T_k = norm_temperature.get('data', [])[0]
 
         # SECTION: Calculate saturation pressure
         res_calc = Antoine.calc(
-            T_value=T_norm,
-            T_unit=regression_temperature_unit,
+            T_value=T_k,
+            T_unit="K",
             A=A,
             B=B,
             C=C,
@@ -449,28 +410,18 @@ def calc_vapor_pressure(
             logger.error("Antoine calculation returned None.")
             return None
 
-        # NOTE: create Pressure model for the result
-        res = Pressure(
-            value=res_calc['vapor_pressure'],
-            unit=regression_pressure_unit
-        )
+        res = Pressure(value=res_calc['vapor_pressure'], unit="Pa")
 
         # NOTE: convert to desired pressure unit
-        if output_pressure_unit:
-            norm_pressure = normalize_unit(
-                data=[res],
-                to_unit=output_pressure_unit,
-                valid_from=["Pa", "kPa", "bar", "atm", "psi"]
+        if pressure_unit != "Pa":
+            res_ = pycuc.convert_from_to(
+                value=res.value,
+                from_unit="Pa",
+                to_unit=pressure_unit,
             )
+            # res
+            return Pressure(value=res_, unit=pressure_unit)
 
-            if not norm_pressure:
-                logger.error("Normalization of pressure unit failed.")
-                return Pressure(value=np.nan, unit=output_pressure_unit)
-
-            res_value = norm_pressure.get('data', [])[0]
-            res = Pressure(value=res_value, unit=output_pressure_unit)
-
-        # >> res
         return res
     except Exception as e:
         logger.exception(f"An error occurred during pressure calculation: {e}")

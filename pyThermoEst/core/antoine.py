@@ -20,13 +20,6 @@ class Antoine:
 
     - VaPr(T) = 10^(A - B/(T + C))
     - VaPr(T) = exp(A - B/(T + C))
-
-    The fitting is performed using non-linear least squares optimization, with support for robust fitting to mitigate outliers.
-    - The fit_antoine() method returns a comprehensive report including fitted coefficients, fit quality metrics, and warnings about potential issues with the fit.
-    - The outlier_report() method ranks data points by their influence on the fit, helping identify potential outliers.
-    - The load_experimental_data() method facilitates loading data from CSV files, while the calc() method allows calculating vapor pressure at specific temperatures using the fitted coefficients.
-
-    The temperature and pressure units are flexible, with internal normalization to Kelvin and Pascals for fitting. The model supports both log10 and natural log forms of the Antoine equation, and the fitting can be performed in either log space or pressure space depending on the user's preference. Robust fitting options include various loss functions to reduce the influence of outliers on the fitted parameters.
     """
 
     def __init__(self):
@@ -524,7 +517,6 @@ class Antoine:
                 return np.array([]), np.array([])
 
             # NOTE: >> to arrays
-            # NOTE: >> to arrays
             temperatures = df[temp_col]
             # >> Unit conversions
             temperatures = [
@@ -543,8 +535,6 @@ class Antoine:
                     to_unit='Pa'
                 ) for P_val in pressures
             ]
-
-            # ! Convert to K and Pa based on specified units
 
             # SECTION: to arrays
             pressures = np.array(pressures, dtype=float)
@@ -587,11 +577,6 @@ class Antoine:
         -------
         Optional[Dict[str, float]]
             Dict with 'temperature' in Kelvin and 'vapor_pressure' in Pa entries, or None on failure.
-
-        Notes
-        -----
-        The temperature is internally converted to Kelvin for calculation. The vapor pressure is returned in Pascals. The base parameter determines whether the Antoine equation uses log10 or natural log for the calculation.
-        So antoine coefficients, A, B, C, are fitted to the Antoine equation when the temperature is in Kelvin and the vapor pressure is in Pascals. The calc() method then uses these coefficients to calculate the vapor pressure at a given temperature, which can be input in either Kelvin or Celsius, and returns the result in Pascals.
         """
         try:
             # >> Convert T to K
