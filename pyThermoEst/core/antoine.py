@@ -32,10 +32,10 @@ class Antoine:
     def fit_antoine(
         T_data: np.ndarray,
         P_data: np.ndarray,
+        T_unit: str,
+        p_unit: str,
         *,
         base: str = "log10",
-        T_unit: str = "K",
-        p_unit: str = "Pa",
         fit_in_log_space: bool = True,
         weights: Optional[np.ndarray] = None,
         x0: Optional[Tuple[float, float, float]] = None,
@@ -66,12 +66,12 @@ class Antoine:
             Array of temperature data points.
         P_data : np.ndarray
             Array of vapor pressure data points.
+        T_unit : str
+            Unit of temperature data: 'K' or 'C'.
+        p_unit : str
+            Unit of pressure data: 'Pa' or 'bar'.
         base : str, optional
             Logarithm base for Antoine equation: 'log10' or 'ln' (default 'log10').
-        T_unit : str, optional
-            Unit of temperature data: 'K' or 'C' (default 'K').
-        p_unit : str, optional
-            Unit of pressure data: 'Pa' or 'bar' (default 'Pa').
         fit_in_log_space : bool, optional
             If True, fit in log space; else fit in pressure space (default True).
         weights : Optional[np.ndarray], optional
@@ -114,6 +114,7 @@ class Antoine:
         loss = loss.lower()
 
         # >> Convert temperature to K
+        # ! if
         if T_unit in ("k", "kelvin"):
             T_k = T
         elif T_unit in ("c", "degc", "celsius", "°c"):
