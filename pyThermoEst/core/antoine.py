@@ -8,6 +8,7 @@ from typing import Optional, Tuple, Dict, Any, List
 from scipy.optimize import least_squares
 from pathlib import Path
 import pycuc
+from pythermodb_settings.models import Pressure, Temperature
 # local
 
 # NOTE: set up logger
@@ -117,26 +118,14 @@ class Antoine:
         # ! if
         if T_unit in ("k", "kelvin"):
             T_k = T
-        elif T_unit in ("c", "degc", "celsius", "°c"):
-            T_k = T + 273.15
         else:
-            logger.error("T_unit must be 'K' or 'C'.")
-            return {}
+            T_k = T
 
         # >> Convert pressure to Pa
         if p_unit == "pa":
             P_pa = P
-        elif p_unit == "bar":
-            P_pa = P * 1e5
-        elif p_unit == "kpa":
-            P_pa = P * 1e3
-        elif p_unit == "atm":
-            P_pa = P * 101325.0
-        elif p_unit == "psi":
-            P_pa = P * 6894.76
         else:
-            logger.error("p_unit must be 'Pa' or 'bar'.")
-            return {}
+            P_pa = P
 
         # >> Check pressures > 0
         if np.any(P_pa <= 0):
@@ -309,8 +298,8 @@ class Antoine:
             "mae_P": mae_P,
             "cov": cov,
             "warnings": warnings,
-            "Tmin_K": float(np.min(T_k)),
-            "Tmax_K": float(np.max(T_k)),
+            "Tmin": Temperature(value=float(np.min(T_k)), unit=T_unit),
+            "Tmax": Temperature(value=float(np.max(T_k)), unit=T_unit),
             # robust metadata
             "loss": loss,
             "f_scale": float(f_scale),
@@ -470,8 +459,6 @@ class Antoine:
     @staticmethod
     def load_experimental_data(
         experimental_data: str | Path,
-        T_unit: str,
-        P_unit: str,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Load experimental data from CSV file, then convert to arrays. The CSV file must contain 'Temperature' and 'Pressure' columns. Temperature and pressure units are specified via T_unit and P_unit, the defaults being 'K' and 'Pa' respectively.
@@ -480,10 +467,6 @@ class Antoine:
         ----------
         experimental_data : str | Path
             Path to CSV file with 'Temperature' and 'Pressure' columns.
-        T_unit : str
-            Unit of temperature data: 'K' or 'C'.
-        P_unit : str
-            Unit of pressure data: 'Pa' or 'bar'.
 
         Returns
         -------
@@ -534,7 +517,6 @@ class Antoine:
     @staticmethod
     def calc(
         T_value: float,
-        T_unit: str,
         A: float,
         B: float,
         C: float,
@@ -547,8 +529,6 @@ class Antoine:
         ----------
         T_value : float
             Temperature value.
-        T_unit : str
-            Unit of temperature: 'K' or 'C'.
         A : float
             Antoine coefficient A.
         B : float
@@ -561,32 +541,23 @@ class Antoine:
         Returns
         -------
         Optional[Dict[str, float]]
-            Dict with 'temperature' in Kelvin and 'vapor_pressure' in Pa entries, or None on failure.
+            Dict with 'temperature' and 'vapor_pressure' values, or None on failure.
         """
         try:
-            # >> Convert T to K
-            if T_unit.lower() in ("k", "kelvin"):
-                T_k = T_value
-            elif T_unit.lower() in ("c", "degc", "celsius", "°c"):
-                T_k = T_value + 273.15
-            else:
-                logger.error("T_unit must be 'K' or 'C'.")
-                return None
-
             # >> Calculate logP
             if base.lower() == "log10":
-                logP = A - B / (T_k + C)
-                P_pa = 10.0 ** logP
+                logP = A - B / (T_value + C)
+                P_value = 10.0 ** logP
             elif base.lower() == "ln":
-                logP = A - B / (T_k + C)
-                P_pa = np.exp(logP)
+                logP = A - B / (T_value + C)
+                P_value = np.exp(logP)
             else:
                 logger.error("base must be 'log10' or 'ln'.")
                 return None
 
             return {
-                "temperature": T_k,
-                "vapor_pressure": P_pa
+                "temperature": T_value,
+                "vapor_pressure": P_value
             }
         except Exception as e:
             logger.exception(f"Failed to calculate vapor pressure: {e}")

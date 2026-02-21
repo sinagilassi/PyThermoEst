@@ -4,7 +4,6 @@ from typing import List, Tuple, Optional, Literal
 import numpy as np
 from pythermodb_settings.models import Temperature, Pressure
 from pathlib import Path
-import pycuc
 # local
 from ..core import Antoine
 from ..util import normalize_unit
@@ -325,8 +324,6 @@ def estimate_coefficients_from_experimental_data(
         # ! temperature and pressure units are specified for correct parsing and normalization
         T_data, P_data = Antoine.load_experimental_data(
             experimental_data=data_path,
-            T_unit=temperature_unit,
-            P_unit=pressure_unit,
         )
 
         if T_data is None or P_data is None:
@@ -437,7 +434,6 @@ def calc_vapor_pressure(
         # SECTION: Calculate saturation pressure
         res_calc = Antoine.calc(
             T_value=T_norm,
-            T_unit=regression_temperature_unit,
             A=A,
             B=B,
             C=C,
