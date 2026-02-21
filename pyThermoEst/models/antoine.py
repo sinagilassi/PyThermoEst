@@ -2,6 +2,7 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, List, Any
 import numpy as np
+from pythermodb_settings.models import Pressure, Temperature
 
 
 class AntoineFitResult(BaseModel):
@@ -9,8 +10,8 @@ class AntoineFitResult(BaseModel):
     B: Optional[float] = None
     C: Optional[float] = None
     base: Optional[str] = None
-    p_unit: str = "pa"
-    T_unit_internal: str = "K"
+    p_unit: str = ""
+    T_unit: str = ""
     fit_in_log_space: bool = False
     success: bool = False
     message: str = ""
@@ -22,8 +23,8 @@ class AntoineFitResult(BaseModel):
     mae_P: Optional[float] = None
     cov: Optional[Any] = None
     warnings: List[str] = Field(default_factory=list)
-    Tmin_K: Optional[float] = None
-    Tmax_K: Optional[float] = None
+    Tmin: Optional[Temperature] = None
+    Tmax: Optional[Temperature] = None
     loss: Optional[Any] = None
     f_scale: Optional[float] = None
 
