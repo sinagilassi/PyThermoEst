@@ -8,7 +8,6 @@ from typing import Optional, Tuple, Dict, Any, List
 from scipy.optimize import least_squares
 from pathlib import Path
 import pycuc
-from pythermodb_settings.models import Pressure, Temperature
 # local
 
 # NOTE: set up logger
@@ -21,6 +20,13 @@ class Antoine:
 
     - VaPr(T) = 10^(A - B/(T + C))
     - VaPr(T) = exp(A - B/(T + C))
+
+    The fitting is performed using non-linear least squares optimization, with support for robust fitting to mitigate outliers.
+    - The fit_antoine() method returns a comprehensive report including fitted coefficients, fit quality metrics, and warnings about potential issues with the fit.
+    - The outlier_report() method ranks data points by their influence on the fit, helping identify potential outliers.
+    - The load_experimental_data() method facilitates loading data from CSV files, while the calc() method allows calculating vapor pressure at specific temperatures using the fitted coefficients.
+
+    The temperature and pressure units are flexible, with internal normalization to Kelvin and Pascals for fitting. The model supports both log10 and natural log forms of the Antoine equation, and the fitting can be performed in either log space or pressure space depending on the user's preference. Robust fitting options include various loss functions to reduce the influence of outliers on the fitted parameters.
     """
 
     def __init__(self):
@@ -33,10 +39,10 @@ class Antoine:
     def fit_antoine(
         T_data: np.ndarray,
         P_data: np.ndarray,
-        T_unit: str,
-        p_unit: str,
         *,
         base: str = "log10",
+        T_unit: str = "K",
+        p_unit: str = "Pa",
         fit_in_log_space: bool = True,
         weights: Optional[np.ndarray] = None,
         x0: Optional[Tuple[float, float, float]] = None,
@@ -67,12 +73,12 @@ class Antoine:
             Array of temperature data points.
         P_data : np.ndarray
             Array of vapor pressure data points.
-        T_unit : str
-            Unit of temperature data: 'K' or 'C'.
-        p_unit : str
-            Unit of pressure data: 'Pa' or 'bar'.
         base : str, optional
             Logarithm base for Antoine equation: 'log10' or 'ln' (default 'log10').
+        T_unit : str, optional
+            Unit of temperature data: 'K' or 'C' (default 'K').
+        p_unit : str, optional
+            Unit of pressure data: 'Pa' or 'bar' (default 'Pa').
         fit_in_log_space : bool, optional
             If True, fit in log space; else fit in pressure space (default True).
         weights : Optional[np.ndarray], optional
@@ -115,17 +121,28 @@ class Antoine:
         loss = loss.lower()
 
         # >> Convert temperature to K
-        # ! if
         if T_unit in ("k", "kelvin"):
             T_k = T
+        elif T_unit in ("c", "degc", "celsius", "°c"):
+            T_k = T + 273.15
         else:
-            T_k = T
+            logger.error("T_unit must be 'K' or 'C'.")
+            return {}
 
         # >> Convert pressure to Pa
         if p_unit == "pa":
             P_pa = P
+        elif p_unit == "bar":
+            P_pa = P * 1e5
+        elif p_unit == "kpa":
+            P_pa = P * 1e3
+        elif p_unit == "atm":
+            P_pa = P * 101325.0
+        elif p_unit == "psi":
+            P_pa = P * 6894.76
         else:
-            P_pa = P
+            logger.error("p_unit must be 'Pa' or 'bar'.")
+            return {}
 
         # >> Check pressures > 0
         if np.any(P_pa <= 0):
@@ -285,8 +302,8 @@ class Antoine:
             "B": B,
             "C": C,
             "base": base,
-            "p_unit": p_unit,
-            "T_unit": T_unit,
+            "p_unit": "Pa",
+            "T_unit_internal": "K",
             "fit_in_log_space": bool(fit_in_log_space),
             "success": bool(res.success),
             "message": str(res.message),
@@ -298,8 +315,8 @@ class Antoine:
             "mae_P": mae_P,
             "cov": cov,
             "warnings": warnings,
-            "Tmin": Temperature(value=float(np.min(T_k)), unit=T_unit),
-            "Tmax": Temperature(value=float(np.max(T_k)), unit=T_unit),
+            "Tmin_K": float(np.min(T_k)),
+            "Tmax_K": float(np.max(T_k)),
             # robust metadata
             "loss": loss,
             "f_scale": float(f_scale),
@@ -459,6 +476,8 @@ class Antoine:
     @staticmethod
     def load_experimental_data(
         experimental_data: str | Path,
+        T_unit: str,
+        P_unit: str,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Load experimental data from CSV file, then convert to arrays. The CSV file must contain 'Temperature' and 'Pressure' columns. Temperature and pressure units are specified via T_unit and P_unit, the defaults being 'K' and 'Pa' respectively.
@@ -467,6 +486,10 @@ class Antoine:
         ----------
         experimental_data : str | Path
             Path to CSV file with 'Temperature' and 'Pressure' columns.
+        T_unit : str
+            Unit of temperature data: 'K' or 'C'.
+        P_unit : str
+            Unit of pressure data: 'Pa' or 'bar'.
 
         Returns
         -------
@@ -501,8 +524,27 @@ class Antoine:
                 return np.array([]), np.array([])
 
             # NOTE: >> to arrays
+            # NOTE: >> to arrays
             temperatures = df[temp_col]
+            # >> Unit conversions
+            temperatures = [
+                pycuc.convert_from_to(
+                    float(T_val),
+                    from_unit=T_unit,
+                    to_unit='K'
+                ) for T_val in temperatures
+            ]
+
             pressures = df[pres_col]
+            pressures = [
+                pycuc.convert_from_to(
+                    float(P_val),
+                    from_unit=P_unit,
+                    to_unit='Pa'
+                ) for P_val in pressures
+            ]
+
+            # ! Convert to K and Pa based on specified units
 
             # SECTION: to arrays
             pressures = np.array(pressures, dtype=float)
@@ -517,6 +559,7 @@ class Antoine:
     @staticmethod
     def calc(
         T_value: float,
+        T_unit: str,
         A: float,
         B: float,
         C: float,
@@ -529,6 +572,8 @@ class Antoine:
         ----------
         T_value : float
             Temperature value.
+        T_unit : str
+            Unit of temperature: 'K' or 'C'.
         A : float
             Antoine coefficient A.
         B : float
@@ -541,23 +586,37 @@ class Antoine:
         Returns
         -------
         Optional[Dict[str, float]]
-            Dict with 'temperature' and 'vapor_pressure' values, or None on failure.
+            Dict with 'temperature' in Kelvin and 'vapor_pressure' in Pa entries, or None on failure.
+
+        Notes
+        -----
+        The temperature is internally converted to Kelvin for calculation. The vapor pressure is returned in Pascals. The base parameter determines whether the Antoine equation uses log10 or natural log for the calculation.
+        So antoine coefficients, A, B, C, are fitted to the Antoine equation when the temperature is in Kelvin and the vapor pressure is in Pascals. The calc() method then uses these coefficients to calculate the vapor pressure at a given temperature, which can be input in either Kelvin or Celsius, and returns the result in Pascals.
         """
         try:
+            # >> Convert T to K
+            if T_unit.lower() in ("k", "kelvin"):
+                T_k = T_value
+            elif T_unit.lower() in ("c", "degc", "celsius", "°c"):
+                T_k = T_value + 273.15
+            else:
+                logger.error("T_unit must be 'K' or 'C'.")
+                return None
+
             # >> Calculate logP
             if base.lower() == "log10":
-                logP = A - B / (T_value + C)
-                P_value = 10.0 ** logP
+                logP = A - B / (T_k + C)
+                P_pa = 10.0 ** logP
             elif base.lower() == "ln":
-                logP = A - B / (T_value + C)
-                P_value = np.exp(logP)
+                logP = A - B / (T_k + C)
+                P_pa = np.exp(logP)
             else:
                 logger.error("base must be 'log10' or 'ln'.")
                 return None
 
             return {
-                "temperature": T_value,
-                "vapor_pressure": P_value
+                "temperature": T_k,
+                "vapor_pressure": P_pa
             }
         except Exception as e:
             logger.exception(f"Failed to calculate vapor pressure: {e}")

@@ -4,6 +4,7 @@ from typing import List, Tuple, Optional, Literal
 import numpy as np
 from pythermodb_settings.models import Temperature, Pressure
 from pathlib import Path
+import pycuc
 # local
 from ..core import Antoine
 from ..util import normalize_unit
@@ -19,6 +20,8 @@ def estimate_coefficients(
     regression_temperature_unit: Literal[
         'K',
         'C',
+        'F',
+        'R'
     ] = 'K',
     regression_pressure_unit: Literal[
         'Pa',
@@ -57,7 +60,7 @@ def estimate_coefficients(
         List of Temperature models containing temperature values and units.
     pressures : List[Pressure]
         List of Pressure models containing pressure values and units.
-    regression_temperature_unit : Literal['K', 'C'], optional
+    regression_temperature_unit : Literal['K', 'C', 'F', 'R'], optional
         Unit to which all temperatures will be normalized for regression, by default 'K'.
     regression_pressure_unit : Literal['Pa', 'kPa', 'bar', 'atm', 'psi'], optional
         Unit to which all pressures will be normalized for regression, by default 'Pa'.
@@ -152,7 +155,7 @@ def estimate_coefficients(
         norm_temperature = normalize_unit(
             data=temperatures,
             to_unit=regression_temperature_unit,
-            valid_from=["C", "K"]
+            valid_from=["C", "F", "K", "R"]
         )
 
         norm_pressures = normalize_unit(
@@ -207,7 +210,7 @@ def estimate_coefficients(
 
 def estimate_coefficients_from_experimental_data(
     experimental_data: str | Path,
-    temperature_unit: Literal['K', 'C'],
+    temperature_unit: Literal['K', 'C', 'F', 'R'],
     pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'],
     *,
     base: str = "log10",
@@ -238,7 +241,7 @@ def estimate_coefficients_from_experimental_data(
     experimental_data : str | Path
         Path to experimental data file (CSV, JSON, etc.) containing temperature and pressure data.
     temperature_unit : str, optional
-        Unit of temperature in the experimental data ('K', 'C'), by default 'K'.
+        Unit of temperature in the experimental data ('K', 'C', 'F', 'R'), by default 'K'.
     pressure_unit : str, optional
         Unit of pressure in the experimental data ('Pa', 'kPa', 'bar', 'atm', 'psi'), by default 'Pa'.
     base : str, optional
@@ -324,6 +327,8 @@ def estimate_coefficients_from_experimental_data(
         # ! temperature and pressure units are specified for correct parsing and normalization
         T_data, P_data = Antoine.load_experimental_data(
             experimental_data=data_path,
+            T_unit=temperature_unit,
+            P_unit=pressure_unit,
         )
 
         if T_data is None or P_data is None:
@@ -365,7 +370,7 @@ def calc_vapor_pressure(
     *,
     base: Literal['log10', 'ln'] = 'log10',
     regression_pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'] = 'Pa',
-    regression_temperature_unit: Literal['K', 'C'] = 'K',
+    regression_temperature_unit: Literal['K', 'C', 'F', 'R'] = 'K',
     output_pressure_unit: Optional[
         Literal[
             'Pa',
@@ -402,9 +407,7 @@ def calc_vapor_pressure(
     regression_pressure_unit : str, optional
         Desired unit for the output pressure ('Pa', 'kPa', 'bar', 'atm', 'psi'), by default 'Pa'.
     regression_temperature_unit : str, optional
-        Unit of the input temperature ('K', 'C'), by default 'K'.
-    output_pressure_unit : Optional[str], optional
-        Optional unit to convert the output pressure to ('Pa', 'kPa', 'bar', 'atm', 'psi'), by default None (no conversion).
+        Unit of the input temperature ('K', 'C', 'F', 'R'), by default 'K'.
 
     Returns
     -------
@@ -421,7 +424,7 @@ def calc_vapor_pressure(
         norm_temperature = normalize_unit(
             data=[temperature],
             to_unit=regression_temperature_unit,
-            valid_from=["C", "K"]
+            valid_from=["C", "F", "K", "R"]
         )
 
         # NOTE: check normalization result
@@ -434,6 +437,7 @@ def calc_vapor_pressure(
         # SECTION: Calculate saturation pressure
         res_calc = Antoine.calc(
             T_value=T_norm,
+            T_unit=regression_temperature_unit,
             A=A,
             B=B,
             C=C,
