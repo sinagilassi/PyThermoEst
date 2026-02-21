@@ -34,8 +34,8 @@ class Antoine:
         P_data: np.ndarray,
         *,
         base: str = "log10",
-        T_unit: str = "K",
-        p_unit: str = "Pa",
+        T_unit: str = "K",  # ! internal unit for fitting
+        p_unit: str = "Pa",  # ! internal unit for fitting
         fit_in_log_space: bool = True,
         weights: Optional[np.ndarray] = None,
         x0: Optional[Tuple[float, float, float]] = None,
@@ -107,6 +107,8 @@ class Antoine:
                 "T_data and P_data must have same length and at least 3 points.")
             return {}
 
+        # SECTION: Unit normalization
+        # ! Temperature and pressure will be converted to K and Pa internally for fitting, regardless of input units. The fit report will indicate the internal units used.
         # NOTE: Normalize string inputs
         T_unit = T_unit.lower()
         base = base.lower()

@@ -170,8 +170,8 @@ def estimate_coefficients(
             T_data=temp_values,
             P_data=pres_values,
             base=base,
-            T_unit="K",
-            p_unit="Pa",
+            T_unit="K",  # ! internal unit for fitting
+            p_unit="Pa",  # ! internal unit for fitting
             fit_in_log_space=fit_in_log_space,
             weights=weights,
             x0=x0,
@@ -193,9 +193,9 @@ def estimate_coefficients(
 
 def estimate_coefficients_from_experimental_data(
     experimental_data: str | Path,
-    *,
     temperature_unit: Literal['K', 'C', 'F', 'R'] = 'K',
     pressure_unit: Literal['Pa', 'kPa', 'bar', 'atm', 'psi'] = 'Pa',
+    *,
     base: str = "log10",
     fit_in_log_space: bool = True,
     weights: Optional[np.ndarray] = None,
@@ -320,8 +320,8 @@ def estimate_coefficients_from_experimental_data(
             T_data=T_data,
             P_data=P_data,
             base=base,
-            T_unit="K",
-            p_unit="Pa",
+            T_unit="K",  # ! internal unit for fitting
+            p_unit="Pa",  # ! internal unit for fitting
             fit_in_log_space=fit_in_log_space,
             weights=weights,
             x0=x0,
@@ -380,6 +380,12 @@ def calc_vapor_pressure(
     -------
     Optional[Pressure]
         Calculated saturation pressure as a Pressure model in Pa, or None if calculation fails.
+
+    Notes
+    -----
+    - The input temperature will be normalized to Kelvin internally for the calculation.
+    - The output pressure will be converted to the specified unit if it is not already in Pa.
+    - The coefficients A, B, and C should be consistent with the temperature unit (Kelvin) and pressure unit (Pa) used in fitting calculations.
     """
     try:
         # SECTION: Normalize temperature to Kelvin
@@ -398,7 +404,7 @@ def calc_vapor_pressure(
         # SECTION: Calculate saturation pressure
         res_calc = Antoine.calc(
             T_value=T_k,
-            T_unit="K",
+            T_unit="K",  # ! internal unit for calculation
             A=A,
             B=B,
             C=C,

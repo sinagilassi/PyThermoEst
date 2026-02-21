@@ -56,8 +56,6 @@ Ps = [Pressure(value=P, unit=pressure_unit) for P in pressures]
 result: AntoineFitResult | None = estimate_coefficients(
     temperatures=Ts,
     pressures=Ps,
-    regression_pressure_unit=pressure_unit,
-    regression_temperature_unit=temperature_unit,
 )
 if result is None:
     print("[bold red]Failed to estimate Antoine coefficients.[/bold red]")
@@ -93,8 +91,6 @@ if result is not None:
             B=B,
             C=C,
             base=base,
-            regression_pressure_unit=pressure_unit,
-            regression_temperature_unit=temperature_unit,
         )
 
         if res_ is not None:
